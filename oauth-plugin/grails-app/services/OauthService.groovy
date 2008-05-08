@@ -30,7 +30,43 @@ class OauthService implements InitializingBean{
     	return new HttpClient();
     }] as HttpClientPool);
     
-    //Initialization
+    /**
+     * Parses OAuth settings in Config.groovy and propagates providers and consumers
+     * 
+     * Example OAuth settings format in Config.groovy
+     * 
+     * e.g. Single consumer per provider
+     * 
+     * oauth{
+     * 		provider_name{
+     * 			requestTokenUrl='http://example.com/oauth/request_token'
+     *			accessTokenUrl='http://example.com/oauth/access_token'
+     *			authUrl='http://example.com/oauth/authorize'
+     *			consumer.key='key'
+     *			consumer.secret='secret'
+     *		}
+     * }
+     * 
+     * e.g. Multiple consumers per provider
+     * 
+     * oauth{
+     * 		provider_name{
+     * 			requestTokenUrl='http://example.com/oauth/request_token'
+     *			accessTokenUrl='http://example.com/oauth/access_token'
+     *			authUrl='http://example.com/oauth/authorize'
+     *			consumers{
+     *				consumer_name{
+     *					key='key'
+     *					secret='secret'
+     *				}
+     *				consumer_name_a{
+     *					key='key'
+     *					secret='secret'
+     *				}
+     *			}
+     *		}
+     * }
+     */
     void afterPropertiesSet() {
         println "Initializating OauthService"
         //initialize consumer list by reading config
