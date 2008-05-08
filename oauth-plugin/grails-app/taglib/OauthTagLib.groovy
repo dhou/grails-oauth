@@ -1,18 +1,35 @@
+/*
+ * Copyright 2008 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 class OauthTagLib {
 	/**
-	 * Renders a authorization request link
+	 * Renders an OAuth user authorization request link
 	 * 
 	 * Attributes:
 	 * consumer - the oauth consumer name
 	 * returnTo (optional) - a map containing the controller and action to redirect to after authorization complete 
-	 * 
+	 * error (optional) - a map containing the controller and action to redirect to when authorization error happens
 	 * Examples:
 	 * 
-	 * <oauth:authLink consumer='myConsumer' returnTo="[controller:'myController',action:'oauthComplete']">Authorize</oauth:authLink>
-	 * <oauth:authLink consumer='myConsumer' returnTo="[controller:'myController']">Authorize</oauth:authLink>
-	 * <oauth:authLink consumer='myConsumer'>Authorize</oauth:authLink>
+	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController',action:'oauthComplete']">Authorize</g:oauthLink>
+	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController']">Authorize</g:oauthLink>
+	 * <g:oauthLink consumer='myConsumer'>Authorize</g:oauthLink>
+	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController',action:'oauthComplete']" error="[controller:'errorController',action:'errorAction']">Authorize</g:oauthLink>
 	 */
-	def authLink = { attrs, body ->
+	def oauthLink = { attrs, body ->
 	    attrs.url = [controller:'oauth', action:'auth', params:[:]]
 	    
 	    def returnTo = attrs.remove('returnTo')
@@ -34,17 +51,17 @@ class OauthTagLib {
 	}
      
 	/**
-	 * Invokes the body of this tag if there is a login error
+	 * Renders the body of the tag when there's an OAuth error
 	 * 
 	 * Example:
 	 * 
-	 * <oauth:hasLoginError>
+	 * <g:hasOauthError>
 	 *     <div class="errors">
 	 *         <ul>
-	 *             <li><openid:renderLoginError /></li>
+	 *             <li><g:renderOauthError /></li>
 	 *         </ul>
 	 *     </div>
-	 * </oauth:hasLoginError>
+	 * </g:hasLoginError>
 	 */
 	def hasOauthError = { attrs, body ->
 	    if (flash.oauthError) {
@@ -53,11 +70,11 @@ class OauthTagLib {
 	}
 	 
 	 /**
-	 * Renders the login error
+	 * Renders the OAuth error
 	 * 
 	 * Example:
 	 * 
-	 * <oauth:renderOauthError />
+	 * <g:renderOauthError />
 	 */
 	def renderOauthError = { attrs ->
 	    if (flash.oauthError) {
