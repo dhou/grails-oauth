@@ -70,15 +70,20 @@ class OauthService implements InitializingBean{
     void afterPropertiesSet() {
         println "Initializating OauthService"
         //initialize consumer list by reading config
+        def serverURL = C.config.grails.serverURL
+        if(!serverURL.endsWith('/')){
+        	serverURL += '/'
+        }
         C.config.oauth.each{key, value->
 	        OAuthServiceProvider provider = new OAuthServiceProvider(value.requestTokenUrl,
 	    			value.authUrl, value.accessTokenUrl);
 	        providers[key] = provider
+	        
 	        if(value?.consumer){
 	        	//default single consumer
 	        	//if single consumer defined, will not go on to parse multiple consumers
 	        	println "Single consumer"
-		        OAuthConsumer consumer = new OAuthConsumer(C.config.grails.serverURL+'/oauth/callback',
+		        OAuthConsumer consumer = new OAuthConsumer(serverURL+'oauth/callback',
 		    			value.consumer.key, value.consumer.secret, provider);
 		        consumers[key] = consumer
 	        }else if(value?.consumers){
@@ -87,7 +92,7 @@ class OauthService implements InitializingBean{
 	        	def allConsumers = value?.consumers
 	        	allConsumers.each{name, token->
 	        		println "Adding consumer[$name]: $token"
-		        	OAuthConsumer consumer = new OAuthConsumer(C.config.grails.serverURL+'/oauth/callback',
+		        	OAuthConsumer consumer = new OAuthConsumer(serverURL+'oauth/callback',
 			    			token.key, token.secret, provider);
 			        consumers[name] = consumer
 	        	}
@@ -115,7 +120,7 @@ class OauthService implements InitializingBean{
      * Returns the OAuth service provider instance by name
      */
     def getProvider(name){
-    	provicers[name]
+    	providers[name]
     }
     
     /**
@@ -130,11 +135,21 @@ class OauthService implements InitializingBean{
      * @return A map containing the token key and secret
      */
     def fetchRequestToken(consumerName){
-    	def consumer = getConsumer(consumerName)
-    	def accessor = new OAuthAccessor(consumer)
-    	oauthClient.getRequestToken(accessor)
-    	log.debug "Got request token and secret: ${accessor.requestToken}, ${accessor.tokenSecret}"
-    	[key:accessor.requestToken, secret:accessor.tokenSecret]
+    	try{
+	    	def consumer = getConsumer(consumerName)
+	    	def accessor = new OAuthAccessor(consumer)
+	    	oauthClient.getRequestToken(accessor)
+	    	log.debug "Got request token and secret: ${accessor.requestToken}, ${accessor.tokenSecret}"
+	    	return [key:accessor.requestToken, secret:accessor.tokenSecret]
+    	}catch(OAuthProblemException e){
+    		if(e.problem == 'parameter_absent'){
+    			//intercept the 'parameter_absent' problem thrown by OAuthClient to give more meaningful message
+    			OAuthProblemException problem = new OAuthProblemException("oauth.requesttoken.missing");
+	    		throw problem
+    		}else{
+    			throw e
+    		}
+    	}
     }
     
     /**
@@ -166,6 +181,10 @@ class OauthService implements InitializingBean{
     	OAuthResponseMessage response = (OAuthResponseMessage) oauthClient.invoke(req)
     	def accessToken = response.getParameter("oauth_token");
 		def tokenSecret = response.getParameter("oauth_token_secret");
+    	if(!accessToken || !tokenSecret){
+    		OAuthProblemException problem = new OAuthProblemException("oauth.accesstoken.missing");
+    		throw problem
+    	}
 		[key:accessToken, secret:tokenSecret]
     }
     
@@ -186,9 +205,19 @@ class OauthService implements InitializingBean{
     	def method = args.get('method','GET')
     	def url = args.url
     	def consumer = getConsumer(args.consumer)
+    	if(!consumer){
+    		OAuthProblemException problem = new OAuthProblemException("oauth.invalid.consumer");
+		    problem.setParameter("requested_consumer", args.consumer);
+		    throw problem;
+    	}
+    	def token = args?.token
+    	if(!token || !token?.key || !token?.secret){
+    		OAuthProblemException problem = new OAuthProblemException("oauth.invalid.token");
+		    throw problem;
+    	}
     	def accessor = new OAuthAccessor(consumer)
-    	accessor.accessToken = args.token.key
-		accessor.tokenSecret = args.token.secret
+    	accessor.accessToken = token.key
+		accessor.tokenSecret = token.secret
 		def map = [oauth_token:accessor.accessToken]
     	if(args.params){
     		log.debug "Putting additional params: ${args.params}"

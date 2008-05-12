@@ -30,7 +30,16 @@ class OauthTagLib {
 	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController',action:'oauthComplete']" error="[controller:'errorController',action:'errorAction']">Authorize</g:oauthLink>
 	 */
 	def oauthLink = { attrs, body ->
-	    attrs.url = [controller:'oauth', action:'auth', params:[:]]
+	    attrs.url = g.oauthUrl(attrs)
+	    out << g.link(attrs, body)
+	}
+	 
+	/**
+	 * Construct the URL for OAuth authorization action
+	 * To be used in other means than a simple <a> link
+	 */
+	def oauthUrl = { attrs ->
+		attrs.url = [controller:'oauth', action:'auth', params:[:]]
 	    
 	    def returnTo = attrs.remove('returnTo')
 	    def controller = returnTo?.controller?:controllerName
@@ -47,9 +56,10 @@ class OauthTagLib {
 	    def consumer = attrs.remove('consumer')
 	    attrs.url.params['consumer'] = consumer
 	    
-	    out << g.link(attrs, body)
+	    out << g.createLink(attrs)
 	}
-     
+	 
+	 
 	/**
 	 * Renders the body of the tag when there's an OAuth error
 	 * 

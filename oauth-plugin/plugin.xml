@@ -1,5 +1,5 @@
 <plugin name='oauth' version='0.1'>
-  <author>Yongrong Hou</author>
+  <author>Yong Rong (Damien) Hou</author>
   <authorEmail>houyongr@gmail.com</authorEmail>
   <title>Adds OAuth capability to Grails apps</title>
   <description>This plugin wraps up the OAuth Java implementation and provides out-of-the-box
