@@ -16,7 +16,7 @@
 
 class OauthTagLib {
 	/**
-	 * Renders an OAuth user authorization request link
+	 * Renders an OAuth user authorization request link to the service provider
 	 * 
 	 * Attributes:
 	 * consumer - the oauth consumer name
@@ -35,7 +35,7 @@ class OauthTagLib {
 	}
 	 
 	/**
-	 * Construct the URL for OAuth authorization action
+	 * Construct the URL string for OAuth authorization action
 	 * To be used in other means than a simple <a> link
 	 */
 	def oauthUrl = { attrs ->
@@ -67,9 +67,7 @@ class OauthTagLib {
 	 * 
 	 * <g:hasOauthError>
 	 *     <div class="errors">
-	 *         <ul>
-	 *             <li><g:renderOauthError /></li>
-	 *         </ul>
+	 *         <g:renderOauthError />
 	 *     </div>
 	 * </g:hasLoginError>
 	 */
