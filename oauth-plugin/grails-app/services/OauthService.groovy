@@ -110,21 +110,21 @@ class OauthService implements InitializingBean{
     }
     
     /**
-     * Returns the consumer instance by name
+     * @return the consumer instance by name
      */
     def getConsumer(name){
     	consumers[name]
     }
     
     /**
-     * Returns the OAuth service provider instance by name
+     * @return the OAuth service provider instance by name
      */
     def getProvider(name){
     	providers[name]
     }
     
     /**
-     * Returns an OAuthHttpClient instance
+     * @return an OAuthHttpClient instance
      */
     def getOauthClient(){
     	oauthClient

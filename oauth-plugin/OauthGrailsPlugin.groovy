@@ -23,9 +23,9 @@ class OauthGrailsPlugin {
     def authorEmail = "houyongr@gmail.com"
     def title = "Adds OAuth capability to Grails apps"
     def description = '''\
-This plugin wraps up the OAuth Java implementation and provides out-of-the-box
-OAuth functionality for Grails apps
-'''
+	This plugin wraps up the OAuth Java implementation and provides out-of-the-box
+	OAuth functionality for Grails apps
+	'''
 
     // URL to the plugin's documentation
     def documentation = "http://grails.org/Oauth+Plugin"
