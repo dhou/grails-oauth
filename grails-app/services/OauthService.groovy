@@ -70,7 +70,7 @@ class OauthService implements InitializingBean{
     void afterPropertiesSet() {
         println "Initializating OauthService"
         //initialize consumer list by reading config
-        def serverURL = C.config.grails.serverURL
+        def serverURL = C.config.grails.serverURL.toString()
         if(!serverURL.endsWith('/')){
         	serverURL += '/'
         }

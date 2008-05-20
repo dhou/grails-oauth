@@ -15,10 +15,9 @@
  */
 
 class OauthGrailsPlugin {
-    def version = 0.1
+    def version = "0.1.1"
     def dependsOn = [:]
 
-    // TODO Fill in these fields
     def author = "Yong Rong (Damien) Hou"
     def authorEmail = "houyongr@gmail.com"
     def title = "Adds OAuth capability to Grails apps"
