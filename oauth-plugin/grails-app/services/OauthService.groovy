@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import org.springframework.beans.factory.InitializingBean
-import org.apache.commons.httpclient.HttpClient;
-import net.oauth.*
-import net.oauth.client.*
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as C
+
+import net.oauth.client.OAuthClient
+import net.oauth.client.OAuthResponseMessage
+import net.oauth.client.httpclient3.HttpClient3
+import org.springframework.beans.factory.InitializingBean
+import net.oauth.*
 
 class OauthService implements InitializingBean{
 	
@@ -26,9 +28,7 @@ class OauthService implements InitializingBean{
     
     def providers = [:]
     def consumers = [:]
-    def oauthClient = new OAuthHttpClient([getHttpClient:{
-    	return new HttpClient();
-    }] as HttpClientPool);
+    def oauthClient = new OAuthClient(new HttpClient3());
     
     /**
      * Parses OAuth settings in Config.groovy and propagates providers and consumers
@@ -159,10 +159,10 @@ class OauthService implements InitializingBean{
     def getAuthUrl(key, consumerName, params){
     	def consumer = getConsumer(consumerName)
     	OAuth.addParameters(consumer.serviceProvider.userAuthorizationURL,
-    			'oauth_token', key,
-    			'oauth_callback',
+    			'oauth_token', key)
+    			/*'oauth_callback',
     			OAuth.addParameters(consumer.callbackURL,
-    					params.entrySet()))
+    					params.entrySet()))*/
     }
     
     /**
@@ -176,9 +176,9 @@ class OauthService implements InitializingBean{
 		accessor.requestToken = requestToken.key
 		accessor.tokenSecret = requestToken.secret
 		
-		def accessUrl = consumer.serviceProvider.accessTokenURL
+		def accessUrl = consumer.serviceProvider.accessTokenURL + "?oauth_verifier=" + requestToken.verifier
 		def req = accessor.newRequestMessage("POST", accessUrl, [oauth_token:accessor.requestToken].entrySet())
-    	OAuthResponseMessage response = (OAuthResponseMessage) oauthClient.invoke(req)
+    	OAuthResponseMessage response = (OAuthResponseMessage) oauthClient.access(req, ParameterStyle.QUERY_STRING)
     	def accessToken = response.getParameter("oauth_token");
 		def tokenSecret = response.getParameter("oauth_token_secret");
     	if(!accessToken || !tokenSecret){
@@ -226,8 +226,8 @@ class OauthService implements InitializingBean{
     	}
     	def req = accessor.newRequestMessage(method, url, map.entrySet())
 		def client = getOauthClient()
-    	OAuthResponseMessage response = (OAuthResponseMessage) client.invoke(req)
-    	response.getBodyAsString()
+    	OAuthResponseMessage response = (OAuthResponseMessage) client.access(req, ParameterStyle.AUTHORIZATION_HEADER)
+    	response.readBodyAsString()
     }
 
 }

@@ -84,11 +84,13 @@ class OauthController {
 			redirect(controller:errorController, action:errorAction, params:redirParams)
 			return
 		}
+		// OAuth 1.0a
+		def oauth_verifier = params?.oauth_verifier
 		
     	try{
-			def accessToken = oauthService.fetchAccessToken(redirParams.consumer, [key:session.oauthToken.key, secret:session.oauthToken.secret])
+			def accessToken = oauthService.fetchAccessToken(redirParams.consumer, [key:session.oauthToken.key, secret:session.oauthToken.secret, verifier:oauth_verifier])
 			session.oauthToken = accessToken
-			log.debug("Got access token: ${accessToken.key}\nGot token secret: ${accessToken.secret}")
+			log.debug("Got access token: ${accessToken.key}\nGot token secret: ${accessToken.secret}\nOAuth Verifier: ${oauth_verifier}")
 			log.debug("Saved token to session: [key]${session.oauthToken.key} [secret]${session.oauthToken.secret}")
 			log.debug "Redirecting: [controller]$returnController, [action]$returnAction"
 			redirect(controller:returnController, action:returnAction, params:redirParams)
