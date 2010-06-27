@@ -1,3 +1,5 @@
+package org.grails.plugins.oauth
+
 /*
  * Copyright 2008 the original author or authors.
  *
@@ -22,8 +24,8 @@ class OauthTagLib {
 	 * consumer - the oauth consumer name
 	 * returnTo (optional) - a map containing the controller and action to redirect to after authorization complete 
 	 * error (optional) - a map containing the controller and action to redirect to when authorization error happens
+     *
 	 * Examples:
-	 * 
 	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController',action:'oauthComplete']">Authorize</g:oauthLink>
 	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController']">Authorize</g:oauthLink>
 	 * <g:oauthLink consumer='myConsumer'>Authorize</g:oauthLink>
@@ -35,33 +37,36 @@ class OauthTagLib {
 	}
 	 
 	/**
-	 * Construct the URL string for OAuth authorization action
-	 * To be used in other means than a simple <a> link
+	 * Construct the URL string for OAuth authorization action.
+	 * To be used in other means than a simple <a> link.
 	 */
 	def oauthUrl = { attrs ->
 		attrs.url = [controller:'oauth', action:'auth', params:[:]]
-	    
-	    def returnTo = attrs.remove('returnTo')
-	    def controller = returnTo?.controller?:controllerName
+
+	    final def returnTo = attrs.remove('returnTo')
+	    final def controller = returnTo?.controller ?: controllerName
+	    final def action = returnTo?.action ?: actionName
+	    final def id = returnTo?.id ?: ""
 	    attrs.url.params["return_controller"] = controller
-	    def action = returnTo?.action?:actionName
 	    attrs.url.params["return_action"] = action
-	    
-	    def error = attrs.remove('error')
-	    def errorController = error?.controller?:controller
+	    attrs.url.params["return_id"] = id
+
+	    final def error = attrs.remove('error')
+	    final def errorController = error?.controller ?: controller
+        final def errorAction = error?.action ?: action
+        final def errorId = error?.id ?: ""
 	    attrs.url.params['error_controller'] = errorController
-	    def errorAction = error?.action?:action
 	    attrs.url.params['error_action'] = errorAction
-	    
+	    attrs.url.params['error_id'] = errorId
+
 	    def consumer = attrs.remove('consumer')
 	    attrs.url.params['consumer'] = consumer
-	    
+
 	    out << g.createLink(attrs)
 	}
-	 
-	 
+    
 	/**
-	 * Renders the body of the tag when there's an OAuth error
+	 * Renders the body of the tag when there's an OAuth error.
 	 * 
 	 * Example:
 	 * 
@@ -77,8 +82,8 @@ class OauthTagLib {
 	    }
 	}
 	 
-	 /**
-	 * Renders the OAuth error
+	/**
+	 * Renders the OAuth error.
 	 * 
 	 * Example:
 	 * 
@@ -86,8 +91,7 @@ class OauthTagLib {
 	 */
 	def renderOauthError = { attrs ->
 	    if (flash.oauthError) {
-	        out << message(code:flash.oauthError)
+	        out << message(code: flash.oauthError)
 	    }
 	}
-     
 }

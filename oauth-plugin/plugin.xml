@@ -1,4 +1,4 @@
-<plugin name='oauth' version='0.2' grailsVersion='1.1.1 &gt; *'>
+<plugin name='oauth' version='0.3' grailsVersion='1.3.2 &gt; *'>
   <author>Yong Rong (Damien) Hou</author>
   <authorEmail>houyongr@gmail.com</authorEmail>
   <title>Adds OAuth capability to Grails apps</title>
@@ -7,11 +7,14 @@
 	</description>
   <documentation>http://grails.org/Oauth+Plugin</documentation>
   <resources>
+    <resource>BuildConfig</resource>
     <resource>DataSource</resource>
     <resource>UrlMappings</resource>
-    <resource>OauthController</resource>
-    <resource>OauthService</resource>
-    <resource>OauthTagLib</resource>
+    <resource>org.grails.plugins.oauth.OauthController</resource>
+    <resource>org.grails.plugins.oauth.OauthService</resource>
+    <resource>org.grails.plugins.oauth.OauthServiceException</resource>
+    <resource>org.grails.plugins.oauth.OauthTagLib</resource>
   </resources>
   <dependencies />
+  <behavior />
 </plugin>

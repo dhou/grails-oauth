@@ -1,0 +1,23 @@
+
+Release notes 0.3 (TBA)
+
+- Update to Grails 1.3.2.
+- Introduction to BuildConfig.groovy.
+- Update build config to pull down signpost library dependencies with maven.
+- Empty library directory (place old jars into project root).
+- Introduce class packages org.grails.plugins.oauth.
+- Correct dependencies.
+- Introduction of signpost to OauthService.
+- Removal of net.oauth library.
+- Defined additional configuration fields.
+- Improved logging.
+- Improved code formatting.
+
+Release notes 0.2
+
+- Patch for LinkedIn
+
+Release notes 0.1
+
+- Initial release.
+
