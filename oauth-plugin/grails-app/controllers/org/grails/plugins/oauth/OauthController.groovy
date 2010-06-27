@@ -16,7 +16,6 @@ package org.grails.plugins.oauth
  * limitations under the License.
  */
 
-import org.apache.commons.httpclient.HttpClient
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as C
 
 import net.oauth.*
@@ -62,7 +61,8 @@ class OauthController {
             log.error "Unable to initialise authorisation: $ose"
 
             flash.oauthError = message(code: "oauth.requesttoken.missing",
-                default: "Failed to retrieve the request token from the OAuth service provider. Please try to the authorization action again.")
+                default: "Failed to retrieve the request token from the OAuth service provider. " +
+                    "Please try to the authorization action again.")
             redirect(controller: errorController, action: errorAction, id: errorId)
         }
     }
@@ -119,7 +119,8 @@ class OauthController {
             // Returned token is different from the last received request token
             flash.oauthError = message(code: "oauth.token.mismatch",
                 default: "There has been an error in the OAuth request. Please try again.")
-            redirect(controller: errorController, action: errorAction, id: errorId, params: redirParams)
+            redirect(controller: errorController, action: errorAction, id: errorId,
+                params: redirParams)
             return
         }
 
