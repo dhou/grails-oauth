@@ -13,7 +13,7 @@ grails.project.dependency.resolution = {
     }
 
     dependencies {
-        runtime 'net.oauth:oauth-core:20090531'
+        //runtime 'net.oauth:oauth-core:20090531'
         runtime 'oauth.signpost:signpost-core:1.2'
     }
 

@@ -148,7 +148,7 @@ class OauthService implements InitializingBean {
      * @param consumerName the consumer to fetch request token from.
      * @return A map containing the token key, secret and authorisation URL.
      */
-    def fetchRequestToken(consumerName) {
+    def fetchRequestToken(final def consumerName) {
         log.debug "Fetching request token for ${consumerName}"
 
         try {
@@ -165,7 +165,7 @@ class OauthService implements InitializingBean {
             [key: consumer?.getToken(), secret: consumer?.getTokenSecret()]
 
         } catch (Exception ex) {
-            final def errorMessage = "Unable to fetch request token: consumerName = $consumerName"
+            final def errorMessage = "Unable to fetch request token (consumerName=$consumerName)"
 
             log.error(errorMessage, ex)
             throw new OauthServiceException(errorMessage, ex)
@@ -182,7 +182,7 @@ class OauthService implements InitializingBean {
      * @return The URL to redirect the user to for authorisation.
      */
     @Deprecated
-    def getAuthUrl(key, consumerName, params) {
+    def getAuthUrl(final def key, final def consumerName, final def params) {
         log.debug "Fetching authorisation URL for $consumerName"
 
         authUrls[consumerName]
@@ -193,7 +193,7 @@ class OauthService implements InitializingBean {
      *
      * @return A map containing the access token and secret.
      */
-    def fetchAccessToken(consumerName, requestToken) {
+    def fetchAccessToken(final def consumerName, final def requestToken) {
         log.debug "Going to exchange for access token"
 
         try {
@@ -239,7 +239,9 @@ class OauthService implements InitializingBean {
      * @param params any request parameters.
      * @return the response from the server.
      */
-    def accessResource(url, consumer, token, method = 'GET', params = null) {
+    def accessResource(final def url, final def consumer, final def token,
+        final def method = 'GET', final def params = null) {
+        
     	accessResource(url: url, consumer: consumer, token: token, method: method, params: params)
     }
     
@@ -249,7 +251,7 @@ class OauthService implements InitializingBean {
      * @param args access resource arguments.
      * @return the response from the server.
      */
-    def accessResource(Map args) {
+    def accessResource(final def Map args) {
         log.debug "Attempt to access protected resource"
 
         // Declare request parameters
@@ -325,7 +327,7 @@ class OauthService implements InitializingBean {
      * @param consumerName the consumer name.
      * @return the consumer instance by name.
      */
-    def getConsumer(consumerName) {
+    def getConsumer(final def consumerName) {
     	consumers[consumerName]
     }
 
@@ -335,7 +337,7 @@ class OauthService implements InitializingBean {
      * @param consumerName the consumer name.
      * @return the provider instance by name.
      */
-    def getProvider(consumerName) {
+    def getProvider(final def consumerName) {
     	providers[consumerName]
     }
 
@@ -345,7 +347,7 @@ class OauthService implements InitializingBean {
      * @param consumerName the consumer name.
      * @return the authorisational URL instance by consumer name.
      */
-    def getAuthUrl(consumerName) {
+    def getAuthUrl(final def consumerName) {
         log.debug "Fetching authorisation URL for $consumerName"
 
     	authUrls[consumerName]
