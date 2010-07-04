@@ -18,9 +18,6 @@ package org.grails.plugins.oauth
 
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as C
 
-import net.oauth.*
-import net.oauth.client.*
-
 class OauthController {
 	def oauthService
 	
@@ -51,7 +48,7 @@ class OauthController {
             session.oauthToken = token
 
             log.debug "Stored token to session: ${session.oauthToken}"
-            def redir = oauthService?.getAuthUrl(consumerName)
+            def redir = token.authUrl
 
             log.debug "Going to redirect to auth url: $redir"
             redirect(url: redir)

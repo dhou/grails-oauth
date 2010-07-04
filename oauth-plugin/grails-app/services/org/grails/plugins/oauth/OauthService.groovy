@@ -29,13 +29,9 @@ class OauthService implements InitializingBean {
     // Transactional service
     boolean transactional = false
 
-    // Set scope to be session
-    static scope = "session"
-
     // Service properties
     def providers = [:]
     def consumers = [:]
-    def authUrls = [:]
     String callback = ""
     
     /**
@@ -157,12 +153,13 @@ class OauthService implements InitializingBean {
             final DefaultOAuthProvider provider = getProvider(consumerName)
 
             // Retrieve request token
-            authUrls[consumerName]  = provider?.retrieveRequestToken(consumer, callback)
+            final def authorisationURL = provider?.retrieveRequestToken(consumer, callback)
 
             log.debug "Request token: ${consumer?.getToken()}"
-            log.debug "Token secret: ${consumer?.getTokenSecret()}\n"
+            log.debug "Token secret: ${consumer?.getTokenSecret()}"
+            log.debug "Authorisation URL: ${authorisationURL}\n"
 
-            [key: consumer?.getToken(), secret: consumer?.getTokenSecret()]
+            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL]
 
         } catch (Exception ex) {
             final def errorMessage = "Unable to fetch request token (consumerName=$consumerName)"
@@ -170,22 +167,6 @@ class OauthService implements InitializingBean {
             log.error(errorMessage, ex)
             throw new OauthServiceException(errorMessage, ex)
         }
-    }
-
-    /**
-     * Constructs the URL for user authorization action, with required parameters appended.
-     *
-     * @deprecated as of 0.2. Replaced with {@link #getAuthUrl(java.lang.String)}
-     * @param key the token key.
-     * @param consumerName the consumer name.
-     * @params params any URL params.
-     * @return The URL to redirect the user to for authorisation.
-     */
-    @Deprecated
-    def getAuthUrl(final def key, final def consumerName, final def params) {
-        log.debug "Fetching authorisation URL for $consumerName"
-
-        authUrls[consumerName]
     }
 
     /**
@@ -339,17 +320,5 @@ class OauthService implements InitializingBean {
      */
     def getProvider(final def consumerName) {
     	providers[consumerName]
-    }
-
-    /**
-     * Returns the current authorisation URL for the provided consumer.
-     *
-     * @param consumerName the consumer name.
-     * @return the authorisational URL instance by consumer name.
-     */
-    def getAuthUrl(final def consumerName) {
-        log.debug "Fetching authorisation URL for $consumerName"
-
-    	authUrls[consumerName]
     }
 }

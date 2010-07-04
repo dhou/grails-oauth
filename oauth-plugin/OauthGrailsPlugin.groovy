@@ -19,16 +19,16 @@ class OauthGrailsPlugin {
     def dependsOn = [:]
 
     // TODO Fill in these fields
-    def author = "Yong Rong (Damien) Hou"
-    def authorEmail = "houyongr@gmail.com"
+    def author = "Yong Rong (Damien) Hou, Anthony Campbell"
+    def authorEmail = "houyongr@gmail.com, acampbell3000 [[at] googlemail [dot]] com"
     def title = "Adds OAuth capability to Grails apps"
     def description = '''\
 	This plugin wraps up the OAuth Java implementation and provides out-of-the-box
-	OAuth functionality for Grails apps
+	OAuth functionality for Grails appplications.
 	'''
 
     // URL to the plugin's documentation
-    def documentation = "http://grails.org/Oauth+Plugin"
+    def documentation = "http://www.grails.org/plugin/oauth"
 	                                      
     def doWithDynamicMethods = { ctx ->
         // TODO Implement registering dynamic methods to classes (optional)

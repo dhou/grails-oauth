@@ -1,11 +1,12 @@
 
 Potential improvements:
-- README.txt file.
-- Turn OAuth service into stateless session bean to improve performance.
---- Will need to stop storing auth URLs locally for controller.
+- Unit test coverage.
 
 Release notes 0.4 (TBA)
+- README.txt file introduction.
 - Removal of net.oauth library dependency.
+- Removal of getAuthUrl methods from OauthService.
+- Turn OAuth service into a singleton to improve performance.
 
 Release notes 0.3 (1st July, 2010)
 
