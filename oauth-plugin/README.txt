@@ -47,7 +47,6 @@ To install the plug-in from the repository enter the following command:
 ------------------------
 Configuration:
 ------------------------
-
 Before using the OAuth plug-in, the required OAuth parameters should be
 defined in the grails-app/conf/Config.groovy file of your application.
 
@@ -116,7 +115,6 @@ be used by the plug-in when generating your callback URL:
 ------------------------
 Asking for authorization:
 ------------------------
-
 To initiate the OAuth authentication process, first call the "auth"
 action of the plugin's OauthController with the consumer name and
 other optional parameters. The taglib shipped with the plugin
@@ -140,7 +138,6 @@ user resources or not.
 ------------------------
 The callback and the access token:
 ------------------------
-
 OAuth plugin provides a predefined callback action. It also handles
 exchanging the authorized token with the access token. So the only
 thing you need to take care of is to define your own action to handle
@@ -170,7 +167,6 @@ You can also map the URL any way you like by using your own UrlMappings.
 ------------------------
 Accessing OAuth protected resource:
 ------------------------
-
 After the completion of OAuth authorization by obtaining the authorized
 access token, your application is now qualified to access the protected
 user resource. The OauthService#accessResource method provides a
@@ -198,7 +194,6 @@ You can also use named parameters. Note that "consumer", "url", and
 ------------------------
 Error handling:
 ------------------------
-
 When problems occur, the OauthService will throw an OauthServiceException.
 You may catch the exception in your own code.
 
@@ -334,7 +329,6 @@ Example:
 ------------------------
 Further documentation
 ------------------------
-
 For further information regarding OAuth and the libraries used to
 provide OAuth in this plug-in, please refer to the following
 documentation:
@@ -345,7 +339,6 @@ documentation:
 ------------------------
 Example usage
 ------------------------
-
 For an example usage of this plug-in please refer to the Grails
 Picasa plug-in:
 
@@ -354,7 +347,6 @@ Picasa plug-in:
 ------------------------
 Contribute
 ------------------------
-
 If you wish to contribute to the project you can find the full
 source available on GitHub.org:
 
