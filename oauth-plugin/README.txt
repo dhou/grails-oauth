@@ -358,5 +358,5 @@ Contribute
 If you wish to contribute to the project you can find the full
 source available on GitHub.org:
 
-    * http://www.grails.org/plugin/picasa
+    * http://wiki.github.com/dhou/grails-oauth
 
