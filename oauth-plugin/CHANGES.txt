@@ -2,7 +2,7 @@
 Potential improvements:
 - Unit test coverage.
 
-Release notes 0.4 (TBA)
+Release notes 0.4 (4th July, 2010)
 - README.txt file introduction.
 - Removal of net.oauth library dependency.
 - Removal of getAuthUrl methods from OauthService.
