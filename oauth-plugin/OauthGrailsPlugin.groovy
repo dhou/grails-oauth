@@ -29,9 +29,10 @@ class OauthGrailsPlugin {
 
     // URL to the plugin's documentation
     def documentation = "http://www.grails.org/plugin/oauth"
-	                                      
-    def doWithDynamicMethods = { ctx ->
-        // TODO Implement registering dynamic methods to classes (optional)
+    
+    def onConfigChange = { event ->
+        // Config change, need to reset the OauthService
+        final def oauthService = event?.ctx?.getBean("oauthService")
+        oauthService?.reset()
     }
-
 }

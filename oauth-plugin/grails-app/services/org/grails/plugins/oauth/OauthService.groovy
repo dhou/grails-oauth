@@ -33,7 +33,16 @@ class OauthService implements InitializingBean {
     def providers = [:]
     def consumers = [:]
     String callback = ""
-    
+
+    /**
+     * Initialise config properties.
+     */
+    @Override
+    void afterPropertiesSet() {
+        log?.info "Initialising the ${this.getClass().getSimpleName()}..."
+        reset()
+    }
+
     /**
      * Parses OAuth settings in Config.groovy and propagates providers and consumers
      * 
@@ -76,9 +85,8 @@ class OauthService implements InitializingBean {
      * Note: The scope provider specific property and is a optional. Only providers
      * such as Google's GDATA API make use of this property.
      */
-    @Override
-    void afterPropertiesSet() {
-        log?.info "Initialising the ${this.getClass().getSimpleName()}..."
+    void reset() {
+        log?.info "Resetting ${this.getClass().getSimpleName()} configuration..."
         
         // Initialize consumer list by reading config
         final String serverURL = C.config.grails.serverURL.toString()
