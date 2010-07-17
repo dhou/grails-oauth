@@ -76,8 +76,9 @@ class OauthService implements InitializingBean {
      * Note: The scope provider specific property and is a optional. Only providers
      * such as Google's GDATA API make use of this property.
      */
+    @Override
     void afterPropertiesSet() {
-        println "Initializating OauthService"
+        log?.info "Initialising the ${this.getClass().getSimpleName()}..."
         
         // Initialize consumer list by reading config
         final String serverURL = C.config.grails.serverURL.toString()
@@ -87,22 +88,22 @@ class OauthService implements InitializingBean {
 
         // Create call back link
         callback = serverURL + "oauth/callback"
-        println "- Callback URL: ${callback}"
+        log?.debug "- Callback URL: ${callback}"
         
         C.config.oauth.each { key, value ->
-            println "Provider: ${key}"
-            println "- Signed: ${value?.signed}"
+            log?.debug "Provider: ${key}"
+            log?.debug "- Signed: ${value?.signed}"
 
             def requestTokenUrl = value?.requestTokenUrl
             if (value?.scope) {
-                println "- Scope: " + value?.scope
+                log?.debug "- Scope: " + value?.scope
 
                 requestTokenUrl = requestTokenUrl + "?scope=" + URLEncoder.encode(value?.scope, "utf-8")
             }
 
-            println "- Request token URL: ${requestTokenUrl}"
-            println "- Access token URL: ${value?.accessTokenUrl}"
-            println "- Authorisation URL: ${value?.authUrl}\n"
+            log?.debug "- Request token URL: ${requestTokenUrl}"
+            log?.debug "- Access token URL: ${value?.accessTokenUrl}"
+            log?.debug "- Authorisation URL: ${value?.authUrl}\n"
 
             // Initialise provider
             providers[key] = new DefaultOAuthProvider(requestTokenUrl,
@@ -113,29 +114,31 @@ class OauthService implements InitializingBean {
                  * Default single consumer if single consumer defined, will not go on to parse
                  * multiple consumers.
                  */
-	        	println "- Single consumer:"
-	        	println "--- Key: ${value?.consumer?.key}"
-	        	println "--- Secret: ${value?.consumer?.secret}"
+	        	log?.debug "- Single consumer:"
+	        	log?.debug "--- Key: ${value?.consumer?.key}"
+	        	log?.debug "--- Secret: ${value?.consumer?.secret}"
 
                 consumers[key] = new DefaultOAuthConsumer(value.consumer.key,
                     value.consumer.secret)
 
 	        } else if (value?.consumers) {
 	        	// Multiple consumers from same provider
-	        	println "- Multiple consumers:"
+	        	log?.debug "- Multiple consumers:"
 
 	        	final def allConsumers = value?.consumers
 	        	allConsumers.each { name, token ->
-	        		println "--- Consumer: ${name}"
-                    println "----- Key: ${token?.key}"
-                    println "----- Secret: ${token?.secret}"
+	        		log?.debug "--- Consumer: ${name}"
+                    log?.debug "----- Key: ${token?.key}"
+                    log?.debug "----- Secret: ${token?.secret}"
 
                     consumers[name] = new DefaultOAuthConsumer(token?.key, token?.secret)
 	        	}
 	        } else {
-	        	println "Error initializaing OauthService: No consumers defined!"
+	        	log?.error "Error initializaing OauthService: No consumers defined!"
 	        }   
         }
+
+        log?.info "${this.getClass().getSimpleName()} intialisation complete"
     }
 
     /**

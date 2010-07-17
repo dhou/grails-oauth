@@ -1,6 +1,10 @@
+Version 0.5
 
 Potential improvements:
 - Unit test coverage.
+
+Release notes 0.5 (17th July, 2010)
+- Replaced println with log statements in the OauthService.
 
 Release notes 0.4 (4th July, 2010)
 - README.txt file introduction.
