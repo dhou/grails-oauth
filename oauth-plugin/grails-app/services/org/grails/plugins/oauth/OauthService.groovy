@@ -138,7 +138,7 @@ class OauthService implements InitializingBean {
 	        }   
         }
 
-        log?.info "${this.getClass().getSimpleName()} intialisation complete"
+        log?.info "${this.getClass().getSimpleName()} intialisation complete\n"
     }
 
     /**
@@ -191,7 +191,7 @@ class OauthService implements InitializingBean {
             final def tokenSecret = consumer?.getTokenSecret()
 
             log.debug "Access token: $accessToken"
-            log.debug "Token secret: $tokenSecret"
+            log.debug "Token secret: $tokenSecret\n"
 
             if (!accessToken || !tokenSecret) {
                 final def errorMessage = "Unable to fetch access token, access token is missing! " +
@@ -291,7 +291,7 @@ class OauthService implements InitializingBean {
             // Send the request
             request.connect()
 
-            log.debug "Return response..."
+            log.debug "Return response...\n"
 
             // Return the request response
             request.getResponseMessage()
