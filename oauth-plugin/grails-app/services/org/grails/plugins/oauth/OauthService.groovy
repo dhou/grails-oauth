@@ -222,8 +222,10 @@ class OauthService implements InitializingBean {
     }
 
     /**
-     *Performs a request and returns request object
-     * can be used to obtain any desired request info
+     * Performs a request and returns request object can be used to obtain
+     * any desired request info.
+     *
+     * @param args access resource arguments.
      */
     protected def getRequest(final def Map args) {
         // Declare request parameters
@@ -259,7 +261,7 @@ class OauthService implements InitializingBean {
             log.debug "Open connection to $url"
 
             // Create an HTTP request to a protected resource
-            HttpURLConnection request = (HttpURLConnection) url.openConnection()
+            final HttpURLConnection request = (HttpURLConnection) url.openConnection()
 
             if (params) {
                 log.debug "Putting additional params: $params"
@@ -358,7 +360,7 @@ class OauthService implements InitializingBean {
     	getResourceContent(url: url, consumer: consumer, token: token, method: method, params: params)
     }
     
-     /**
+    /**
      * Helper function with named parameters to access an OAuth protected resource.
      *
      * @param args access resource arguments.
@@ -368,27 +370,32 @@ class OauthService implements InitializingBean {
         log.debug "Attempting to get content from protected resource"
         BufferedReader rd
         StringBuilder sb
+
         try {
             rd = new BufferedReader(
                 new InputStreamReader(getRequest(args).getInputStream())
             );
+
             log.debug "Initialized request.reader"
             sb = new StringBuilder();
             String line
             while ((line = rd.readLine()) != null) {
                 sb.append(line + '\n');
             }
+
             log.debug "Content read successfully"
             sb.toString()
+
         } catch (Exception ex) { //should be only IOException here
             final def errorMessage = "Unable to read data from procected resource:"+
                 " method = $method, params = $params, url = $url, consumer = $consumer"
 
             log.error(errorMessage, ex)
             throw new OauthServiceException(errorMessage, ex)
+            
         } finally {
-          rd = null;
-          sb = null;
+            rd = null;
+            sb = null;
         }
     }
 }
