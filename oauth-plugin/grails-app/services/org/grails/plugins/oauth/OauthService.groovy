@@ -220,7 +220,79 @@ class OauthService implements InitializingBean {
             throw new OauthServiceException(errorMessage, ex)
         }
     }
-    
+
+    /**
+     *Performs a request and returns request object
+     * can be used to obtain any desired request info
+     */
+    protected def getRequest(final def Map args) {
+        // Declare request parameters
+        def method
+        def params
+        URL url
+        DefaultOAuthConsumer consumer
+
+        try {
+            method = args?.get('method','GET')
+            params = args?.params
+            url = new URL(args?.url)
+            consumer = getConsumer(args?.consumer)
+
+            if (!consumer) {
+                final def errorMessage = "Unable to access to procected resource, invalid consumer: " +
+                    "method = $method, params = $params, url = $url, consumer = $consumer"
+
+                log.error(errorMessage)
+                throw new OauthServiceException(errorMessage)
+            }
+
+            def token = args?.token
+            if (!token || !token?.key || !token?.secret) {
+                final def errorMessage = "Unable to access to procected resource, invalid token: " +
+                    "method = $method, params = $params, url = $url, consumer = $consumer, " +
+                    "token = $token, token.key = ${token?.key}, token.secret = ${token?.secret}"
+
+                log.error(errorMessage)
+                throw new OauthServiceException(errorMessage)
+            }
+
+            log.debug "Open connection to $url"
+
+            // Create an HTTP request to a protected resource
+            HttpURLConnection request = (HttpURLConnection) url.openConnection()
+
+            if (params) {
+                log.debug "Putting additional params: $params"
+
+                params.each { key, value ->
+                    request.addRequestProperty(key, value)
+                }
+
+                log.debug "Request properties are now: ${request?.getRequestProperties()}"
+            }
+
+            // Sign the request
+            consumer.sign(request)
+
+            log.debug "Send request..."
+
+            // Send the request
+            request.connect()
+
+            log.debug "Return request...\n"
+
+            // Return the request
+            request
+
+        } catch (Exception ex) {
+            final def errorMessage = "Unable to access to procected resource: method = $method, " +
+                "params = $params, url = $url, consumer = $consumer"
+
+            log.error(errorMessage, ex)
+            throw new OauthServiceException(errorMessage, ex)
+        }
+    }
+
     /**
      * Helper function with default parameters to access an OAuth protected resource.
      *
@@ -244,73 +316,10 @@ class OauthService implements InitializingBean {
      * @return the response from the server.
      */
     def accessResource(final def Map args) {
-        log.debug "Attempt to access protected resource"
+        log.debug "Attempting to access protected resource"
+        // Return the request response
+        getRequest(args).getResponseMessage()
 
-        // Declare request parameters
-        def method
-        def params
-        URL url
-        DefaultOAuthConsumer consumer
-
-        try {
-            method = args?.get('method','GET')
-            params = args?.params
-            url = new URL(args?.url)
-            consumer = getConsumer(args?.consumer)
-
-            if (!consumer) {
-                final def errorMessage = "Unable to access to procected resource, invalid consumer: " +
-                    "method = $method, params = $params, url = $url, consumer = $consumer"
-
-                log.error(errorMessage, ex)
-                throw new OauthServiceException(errorMessage, ex)
-            }
-
-            def token = args?.token
-            if (!token || !token?.key || !token?.secret) {
-                final def errorMessage = "Unable to access to procected resource, invalid token: " +
-                    "method = $method, params = $params, url = $url, consumer = $consumer, " +
-                    "token = $token, token.key = ${token?.key}, token.secret = ${token?.secret}"
-
-                log.error(errorMessage, ex)
-                throw new OauthServiceException(errorMessage, ex)
-            }
-
-            log.debug "Open connection to $url"
-
-            // Create an HTTP request to a protected resource
-            HttpURLConnection request = (HttpURLConnection) url.openConnection()
-            
-            if (params) {
-                log.debug "Putting additional params: $params"
-
-                params.each { key, value ->
-                    request.addRequestProperty(key, value)
-                }
-
-                log.debug "Request properties are now: ${request?.getRequestProperties()}"
-            }
-            
-            // Sign the request
-            consumer.sign(request)
-
-            log.debug "Send request..."
-
-            // Send the request
-            request.connect()
-
-            log.debug "Return response...\n"
-
-            // Return the request response
-            request.getResponseMessage()
-
-        } catch (Exception ex) {
-            final def errorMessage = "Unable to access to procected resource: method = $method, " +
-                "params = $params, url = $url, consumer = $consumer"
-        
-            log.error(errorMessage, ex)
-            throw new OauthServiceException(errorMessage, ex)
-        }
     }
 
     /**
@@ -331,5 +340,55 @@ class OauthService implements InitializingBean {
      */
     def getProvider(final def consumerName) {
     	providers[consumerName]
+    }
+
+    /**
+     * Helper function with default parameters to get content of OAuth protected resource.
+     *
+     * @param url URL to the protected resource.
+     * @param consumer the consumer.
+     * @param token the access token.
+     * @param method HTTP method, whether to use POST or GET.
+     * @param params any request parameters.
+     * @return the response content.
+     */
+    def getResourceContent(final def url, final def consumer, final def token,
+        final def method = 'GET', final def params = null) {
+
+    	getResourceContent(url: url, consumer: consumer, token: token, method: method, params: params)
+    }
+    
+     /**
+     * Helper function with named parameters to access an OAuth protected resource.
+     *
+     * @param args access resource arguments.
+     * @return the response from the server as String.
+     */
+    def getResourceContent(final def Map args) {
+        log.debug "Attempting to get content from protected resource"
+        BufferedReader rd
+        StringBuilder sb
+        try {
+            rd = new BufferedReader(
+                new InputStreamReader(getRequest(args).getInputStream())
+            );
+            log.debug "Initialized request.reader"
+            sb = new StringBuilder();
+            String line
+            while ((line = rd.readLine()) != null) {
+                sb.append(line + '\n');
+            }
+            log.debug "Content read successfully"
+            sb.toString()
+        } catch (Exception ex) { //should be only IOException here
+            final def errorMessage = "Unable to read data from procected resource:"+
+                " method = $method, params = $params, url = $url, consumer = $consumer"
+
+            log.error(errorMessage, ex)
+            throw new OauthServiceException(errorMessage, ex)
+        } finally {
+          rd = null;
+          sb = null;
+        }
     }
 }
