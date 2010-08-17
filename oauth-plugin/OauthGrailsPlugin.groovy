@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2008 the original author or authors.
  *
@@ -15,7 +16,7 @@
  */
 
 class OauthGrailsPlugin {
-    def version = 0.6
+    def version = 0.7
     def dependsOn = [:]
 
     // TODO Fill in these fields
