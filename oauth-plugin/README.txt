@@ -1,4 +1,5 @@
-Copyright 2010 Anthony Campbell
+
+Copyright 2010 Anthony Campbell (anthonycampbell.co.uk)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -221,13 +222,6 @@ OauthService
 
 Used to fetch the authorization request token from the provided consumer.
 
-    @Deprecated
-    getAuthUrl(java.lang.String key, java.lang.String consumerName,
-        java.util.Map params)
-    
-Used to return the current authorisation URL returned by the provided
-consumer.
-
     fetchAccessToken(java.lang.String consumerName,
         java.util.Map requestToken)
 
@@ -255,11 +249,6 @@ Returns the consumer instance by name.
     getProvider(java.lang.String name)
 
 Returns the OAuth service provider instance by name.
-
-    getAuthUrl(java.lang.String consumerName)
-
-Used to return the current authorisation URL returned by the provided
-consumer.
 
 ------------------------
 OauthController
@@ -351,4 +340,3 @@ If you wish to contribute to the project you can find the full
 source available on GitHub.org:
 
     * http://wiki.github.com/dhou/grails-oauth
-
