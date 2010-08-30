@@ -1,7 +1,10 @@
-Version 0.8
+Version 0.9
 
 Potential improvements:
 - Unit test coverage.
+
+Release notes 0.9 (TBA)
+- 
 
 Release notes 0.8 (30th August, 2010)
 - Fix original access resource method and remove additional methods.
