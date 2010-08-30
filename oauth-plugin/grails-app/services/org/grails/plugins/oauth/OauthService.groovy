@@ -335,7 +335,7 @@ class OauthService implements InitializingBean {
             log.debug "Initialized request reader"
             response = new StringBuilder();
             while ((line = streamReader.readLine()) != null) {
-                response.append(line + '\n');
+                response.append(line + "\n")
             }
 
             // Return
