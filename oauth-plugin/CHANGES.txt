@@ -2,10 +2,10 @@ Version 0.8
 
 Potential improvements:
 - Unit test coverage.
-- Clean up of the protected retrieval methods?
 
-Release notes 0.8 (TBA)
-- 
+Release notes 0.8 (30th August, 2010)
+- Fix original access resource method and remove additional methods.
+- Extra methods causing confusion, fixing original also addresses GRAILSPLUGINS-2422.
 
 Release notes 0.7 (18th August, 2010)
 - Update to the OAuth to provide additional methods to help retrieve protected resources.

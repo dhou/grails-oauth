@@ -319,9 +319,41 @@ class OauthService implements InitializingBean {
      */
     def accessResource(final def Map args) {
         log.debug "Attempting to access protected resource"
-        // Return the request response
-        getRequest(args).getResponseMessage()
 
+        // Declare response variables
+        BufferedReader streamReader
+        StringBuilder response
+        String line
+
+        try {
+            // Get input stream from request
+            streamReader = new BufferedReader(
+                new InputStreamReader(getRequest(args).getInputStream())
+            );
+
+            // Read response
+            log.debug "Initialized request reader"
+            response = new StringBuilder();
+            while ((line = streamReader.readLine()) != null) {
+                response.append(line + '\n');
+            }
+
+            // Return
+            log.debug "Content read successfully"
+            response.toString()
+
+        } catch (Exception ex) { // Should be only IOException here
+            final def errorMessage = "Unable to read data from procected resource: "+
+                "args = $args"
+
+            log.error(errorMessage, ex)
+            throw new OauthServiceException(errorMessage, ex)
+
+        } finally {
+            streamReader = null
+            response = null
+            line = null
+        }
     }
 
     /**
@@ -342,60 +374,5 @@ class OauthService implements InitializingBean {
      */
     def getProvider(final def consumerName) {
     	providers[consumerName]
-    }
-
-    /**
-     * Helper function with default parameters to get content of OAuth protected resource.
-     *
-     * @param url URL to the protected resource.
-     * @param consumer the consumer.
-     * @param token the access token.
-     * @param method HTTP method, whether to use POST or GET.
-     * @param params any request parameters.
-     * @return the response content.
-     */
-    def getResourceContent(final def url, final def consumer, final def token,
-        final def method = 'GET', final def params = null) {
-
-    	getResourceContent(url: url, consumer: consumer, token: token, method: method, params: params)
-    }
-    
-    /**
-     * Helper function with named parameters to access an OAuth protected resource.
-     *
-     * @param args access resource arguments.
-     * @return the response from the server as String.
-     */
-    def getResourceContent(final def Map args) {
-        log.debug "Attempting to get content from protected resource"
-        BufferedReader rd
-        StringBuilder sb
-
-        try {
-            rd = new BufferedReader(
-                new InputStreamReader(getRequest(args).getInputStream())
-            );
-
-            log.debug "Initialized request.reader"
-            sb = new StringBuilder();
-            String line
-            while ((line = rd.readLine()) != null) {
-                sb.append(line + '\n');
-            }
-
-            log.debug "Content read successfully"
-            sb.toString()
-
-        } catch (Exception ex) { //should be only IOException here
-            final def errorMessage = "Unable to read data from procected resource:"+
-                " method = $method, params = $params, url = $url, consumer = $consumer"
-
-            log.error(errorMessage, ex)
-            throw new OauthServiceException(errorMessage, ex)
-            
-        } finally {
-            rd = null;
-            sb = null;
-        }
     }
 }
