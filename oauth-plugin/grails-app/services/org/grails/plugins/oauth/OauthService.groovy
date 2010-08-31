@@ -258,6 +258,27 @@ class OauthService implements InitializingBean {
                 throw new OauthServiceException(errorMessage)
             }
 
+            if (params) {
+                log.debug "Putting additional params as URL params: $params"
+
+                StringBuffer queryParams = new StringBuffer()
+                queryParams.append("?")
+                params.eachWithIndex { key, value, i ->
+                    if( i > 0 ) {
+                        queryParams.append("&")
+                    }
+
+                    queryParams.append(key)
+                    queryParams.append("=")
+                    queryParams.append(URLEncoder.encode( "$value", "utf-8"))
+                }
+
+                if( queryParams.length() > 0 ) {
+                    url = new URL( url.toString() + queryParams.toString() )
+                    log.debug "URL is now: ${url.toString()}"
+                }
+            }
+
             log.debug "Open connection to $url"
 
             // Create an HTTP request to a protected resource
@@ -267,10 +288,10 @@ class OauthService implements InitializingBean {
             request.setRequestMethod(method)
 
             if (params) {
-                log.debug "Putting additional params: $params"
+                log.debug "Putting additional params as headers: $params"
 
                 params.each { key, value ->
-                    request.addRequestProperty(key, value)
+                    request.addRequestProperty(key, "$value")
                 }
 
                 log.debug "Request properties are now: ${request?.getRequestProperties()}"
