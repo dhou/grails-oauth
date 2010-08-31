@@ -248,7 +248,7 @@ class OauthService implements InitializingBean {
                 throw new OauthServiceException(errorMessage)
             }
 
-            def token = args?.token
+            final def token = args?.token
             if (!token || !token?.key || !token?.secret) {
                 final def errorMessage = "Unable to access to procected resource, invalid token: " +
                     "method = $method, params = $params, url = $url, consumer = $consumer, " +
@@ -343,7 +343,7 @@ class OauthService implements InitializingBean {
             response.toString()
 
         } catch (Exception ex) { // Should be only IOException here
-            final def errorMessage = "Unable to read data from procected resource: "+
+            final def errorMessage = "Unable to read data from procected resource: " +
                 "args = $args"
 
             log.error(errorMessage, ex)
