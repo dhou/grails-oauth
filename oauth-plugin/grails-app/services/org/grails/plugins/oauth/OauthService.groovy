@@ -262,6 +262,9 @@ class OauthService implements InitializingBean {
 
             // Create an HTTP request to a protected resource
             final HttpURLConnection request = (HttpURLConnection) url.openConnection()
+            
+            // Set the request method (i.e. GET, POST, etc)
+            request.setRequestMethod(method)
 
             if (params) {
                 log.debug "Putting additional params: $params"
