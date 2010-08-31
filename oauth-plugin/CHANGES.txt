@@ -1,7 +1,10 @@
-Version 0.9
+Version 0.10
 
 Potential improvements:
 - Unit test coverage.
+
+Release notes 0.10 (TBA)
+- 
 
 Release notes 0.9 (31 August, 2010)
 - Fix the HttpURLConnection to apply the request method (i.e. GET, POST etc).
