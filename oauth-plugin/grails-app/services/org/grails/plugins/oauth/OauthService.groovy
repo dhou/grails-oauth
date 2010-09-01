@@ -44,7 +44,8 @@ class OauthService implements InitializingBean {
     }
 
     /**
-     * Parses OAuth settings in Config.groovy and propagates providers and consumers
+     * Parses OAuth settings in Config.groovy and prepares configuration cache for 
+     * providers and consumers
      * 
      * Example OAuth settings format in Config.groovy
      * 
@@ -113,9 +114,8 @@ class OauthService implements InitializingBean {
             log?.debug "- Access token URL: ${value?.accessTokenUrl}"
             log?.debug "- Authorisation URL: ${value?.authUrl}\n"
 
-            // Initialise provider
-            providers[key] = new DefaultOAuthProvider(requestTokenUrl,
-                value?.accessTokenUrl, value?.authUrl)
+            // Initialise provider config map
+            providers[key] = ['requestTokenUrl': requestTokenUrl, 'accessTokenUrl': value?.accessTokenUrl, 'authUrl': value?.authUrl]
 	        
 	        if (value?.consumer) {
 	        	/*
@@ -126,8 +126,7 @@ class OauthService implements InitializingBean {
 	        	log?.debug "--- Key: ${value?.consumer?.key}"
 	        	log?.debug "--- Secret: ${value?.consumer?.secret}"
 
-                consumers[key] = new DefaultOAuthConsumer(value.consumer.key,
-                    value.consumer.secret)
+                consumers[key] = ['key': value.consumer.key, 'secret': value.consumer.secret]
 
 	        } else if (value?.consumers) {
 	        	// Multiple consumers from same provider
@@ -139,7 +138,7 @@ class OauthService implements InitializingBean {
                     log?.debug "----- Key: ${token?.key}"
                     log?.debug "----- Secret: ${token?.secret}"
 
-                    consumers[name] = new DefaultOAuthConsumer(token?.key, token?.secret)
+                    consumers[name] = ['key': token?.key, 'secret': token?.secret]
 	        	}
 	        } else {
 	        	log?.error "Error initializaing OauthService: No consumers defined!"
@@ -165,12 +164,14 @@ class OauthService implements InitializingBean {
 
             // Retrieve request token
             final def authorisationURL = provider?.retrieveRequestToken(consumer, callback)
+            def isOAuth10a = provider.isOAuth10a()
 
             log.debug "Request token: ${consumer?.getToken()}"
             log.debug "Token secret: ${consumer?.getTokenSecret()}"
             log.debug "Authorisation URL: ${authorisationURL}\n"
+            log.debug "Is OAuth 1.0a: ${isOAuth10a}"
 
-            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL]
+            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL, isOAuth10a: isOAuth10a]
 
         } catch (Exception ex) {
             final def errorMessage = "Unable to fetch request token (consumerName=$consumerName)"
@@ -191,7 +192,15 @@ class OauthService implements InitializingBean {
         try {
             final DefaultOAuthConsumer consumer = getConsumer(consumerName)
             final DefaultOAuthProvider provider = getProvider(consumerName)
-
+            
+            // Set the request token
+            consumer.setTokenWithSecret(requestToken.key, requestToken.secret)
+            
+            // Set to OAuth 1.0a if necessary (to make signpost add 'oath_verifier' from callback to request)
+            if(requestToken.isOAuth10a) {
+                provider.setOAuth10a(true)
+            }
+            
             // Retrieve access token
             provider.retrieveAccessToken(consumer, requestToken.verifier)
 
@@ -233,7 +242,6 @@ class OauthService implements InitializingBean {
         def params
         URL url
         DefaultOAuthConsumer consumer
-
         try {
             method = args?.get('method','GET')
             params = args?.params
@@ -387,7 +395,8 @@ class OauthService implements InitializingBean {
      * @return the consumer instance by name.
      */
     def getConsumer(final def consumerName) {
-    	consumers[consumerName]
+        final def consumerValues = consumers[consumerName]
+        return new DefaultOAuthConsumer( consumerValues.key, consumerValues.secret )
     }
 
     /**
@@ -397,6 +406,7 @@ class OauthService implements InitializingBean {
      * @return the provider instance by name.
      */
     def getProvider(final def consumerName) {
-    	providers[consumerName]
+        final def providerValues = providers[consumerName]
+        return new DefaultOAuthProvider(providerValues.requestTokenUrl, providerValues.accessTokenUrl, providerValues.authUrl)
     }
 }

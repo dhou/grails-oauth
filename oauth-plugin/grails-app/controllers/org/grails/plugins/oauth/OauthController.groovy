@@ -127,14 +127,16 @@ class OauthController {
         try {
             def accessToken = oauthService?.fetchAccessToken(redirParams?.consumer,
                 [key: session?.oauthToken?.key, secret: session?.oauthToken?.secret,
-                    verifier: oauth_verifier])
+                    verifier: oauth_verifier, isOAuth10a: session?.oauthToken?.isOAuth10a])
             session.oauthToken = accessToken
 
             log.debug("Got access token: ${accessToken?.key}")
             log.debug("Got token secret: ${accessToken?.secret}")
             log.debug("OAuth Verifier: ${oauth_verifier}")
             log.debug("Saved token to session: [key]${session?.oauthToken?.key} " +
-                "[secret]${session?.oauthToken?.secret}")
+                "[secret]${session?.oauthToken?.secret} " +
+                "[verifier]${session?.oauthToken?.verifier} " +
+                "[isOAuth10a]${session?.oauthToken?.isOAuth10a}")
             log.debug "Redirecting: [controller]$returnController, [action]$returnAction\n"
 
             redirect(controller: returnController, action: returnAction, id: returnId,
