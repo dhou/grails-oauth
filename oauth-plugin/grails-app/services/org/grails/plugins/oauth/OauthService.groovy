@@ -266,6 +266,9 @@ class OauthService implements InitializingBean {
                 throw new OauthServiceException(errorMessage)
             }
 
+            // Set OAuth access token and secret
+            consumer.setTokenWithSecret(token.key, token.secret)
+
             if (params) {
                 log.debug "Putting additional params as URL params: $params"
 
