@@ -298,16 +298,6 @@ class OauthService implements InitializingBean {
             // Set the request method (i.e. GET, POST, etc)
             request.setRequestMethod(method)
 
-            if (params) {
-                log.debug "Putting additional params as headers: $params"
-
-                params.each { key, value ->
-                    request.addRequestProperty(key, "$value")
-                }
-
-                log.debug "Request properties are now: ${request?.getRequestProperties()}"
-            }
-
             // Sign the request
             consumer.sign(request)
 
