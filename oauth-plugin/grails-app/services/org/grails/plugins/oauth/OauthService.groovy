@@ -115,7 +115,8 @@ class OauthService implements InitializingBean {
             log?.debug "- Authorisation URL: ${value?.authUrl}\n"
 
             // Initialise provider config map
-            providers[key] = ['requestTokenUrl': requestTokenUrl, 'accessTokenUrl': value?.accessTokenUrl, 'authUrl': value?.authUrl]
+            providers[key] = ['requestTokenUrl': requestTokenUrl, 'accessTokenUrl': value?.accessTokenUrl,
+                'authUrl': value?.authUrl]
 	        
 	        if (value?.consumer) {
 	        	/*
@@ -164,14 +165,15 @@ class OauthService implements InitializingBean {
 
             // Retrieve request token
             final def authorisationURL = provider?.retrieveRequestToken(consumer, callback)
-            def isOAuth10a = provider.isOAuth10a()
+            final def isOAuth10a = provider.isOAuth10a()
 
             log.debug "Request token: ${consumer?.getToken()}"
             log.debug "Token secret: ${consumer?.getTokenSecret()}"
             log.debug "Authorisation URL: ${authorisationURL}\n"
             log.debug "Is OAuth 1.0a: ${isOAuth10a}"
 
-            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL, isOAuth10a: isOAuth10a]
+            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL,
+                isOAuth10a: isOAuth10a]
 
         } catch (Exception ex) {
             final def errorMessage = "Unable to fetch request token (consumerName=$consumerName)"
@@ -197,7 +199,7 @@ class OauthService implements InitializingBean {
             consumer.setTokenWithSecret(requestToken.key, requestToken.secret)
             
             // Set to OAuth 1.0a if necessary (to make signpost add 'oath_verifier' from callback to request)
-            if(requestToken.isOAuth10a) {
+            if (requestToken.isOAuth10a) {
                 provider.setOAuth10a(true)
             }
             
@@ -242,6 +244,7 @@ class OauthService implements InitializingBean {
         def params
         URL url
         DefaultOAuthConsumer consumer
+
         try {
             method = args?.get('method','GET')
             params = args?.params
@@ -256,6 +259,7 @@ class OauthService implements InitializingBean {
                 throw new OauthServiceException(errorMessage)
             }
 
+            // Attempt to retrieve token
             final def token = args?.token
             if (!token || !token?.key || !token?.secret) {
                 final def errorMessage = "Unable to access to procected resource, invalid token: " +
@@ -281,11 +285,11 @@ class OauthService implements InitializingBean {
 
                     queryParams.append(key)
                     queryParams.append("=")
-                    queryParams.append(URLEncoder.encode( "$value", "utf-8"))
+                    queryParams.append(URLEncoder.encode("$value", "utf-8"))
                 }
 
-                if( queryParams.length() > 0 ) {
-                    url = new URL( url.toString() + queryParams.toString() )
+                if (queryParams.length() > 0 ) {
+                    url = new URL(url.toString() + queryParams.toString())
                     log.debug "URL is now: ${url.toString()}"
                 }
             }
@@ -389,7 +393,7 @@ class OauthService implements InitializingBean {
      */
     def getConsumer(final def consumerName) {
         final def consumerValues = consumers[consumerName]
-        return new DefaultOAuthConsumer( consumerValues.key, consumerValues.secret )
+        return new DefaultOAuthConsumer(consumerValues.key, consumerValues.secret )
     }
 
     /**
@@ -400,6 +404,7 @@ class OauthService implements InitializingBean {
      */
     def getProvider(final def consumerName) {
         final def providerValues = providers[consumerName]
-        return new DefaultOAuthProvider(providerValues.requestTokenUrl, providerValues.accessTokenUrl, providerValues.authUrl)
+        return new DefaultOAuthProvider(providerValues.requestTokenUrl, providerValues.accessTokenUrl,
+            providerValues.authUrl)
     }
 }
