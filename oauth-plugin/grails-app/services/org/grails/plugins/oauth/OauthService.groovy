@@ -609,7 +609,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *         if token does not contain both a 'key' and 'secret'
      */
-    def assertAccessTokenFormat(def token) {
+    private def assertAccessTokenFormat(def token) {
         if (!token || !token?.key || !token?.secret) {
             final def errorMessage = "Invalid access token: $token, token.key = ${token?.key}, token.secret = ${token?.secret}"
 
