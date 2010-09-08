@@ -3,13 +3,27 @@ Version 0.10
 Potential improvements:
 - Unit test coverage.
 
-Release notes 0.10 (TBA)
+Release notes 0.10 (8th September, 2010)
+- Fix for GRAILSPLUGINS-2459, Add support for PUT/DELETE/HEAD/OPTIONS.
+- Fix for GRAILSPLUGINS-2458, Don't wrap all exceptions in OauthServiceException (Allow for easier handling of
+        different types of failures).
+- Fix for GRAILSPLUGINS-2457, Add support for signing (and not executing) custom HttpUriRequest objects.
+- Fix for GRAILSPLUGINS-2456, Add support for signing and executing custom HttpUriRequest objects.
+- Fix for GRAILSPLUGINS-2455, Add support for retrieving an HttpResponse instead of just the body.
+- Fix for GRAILSPLUGINS-2454, Add shortcut for setting Accept header.
+- Fix for GRAILSPLUGINS-2453, Add support for setting Content-Type.
+- Fix for GRAILSPLUGINS-2452, Add support for adding body content.
+- Fix for GRAILSPLUGINS-2451, Add support for adding headers.
+- Fix for GRAILSPLUGINS-2450, Use HttpClient instead of HttpURLConnection.
+- Fix for GRAILSPLUGINS-2449, Better support for REST API calls.
 - Fix for GRAILSPLUGINS-2438, OauthService#getRequest(Map) does not set access token on OAuthConsumer.
 - Fix for GRAILSPLUGINS-2437, OauthService should not re-use provider/consumer objects.
 - Make getRequest() append params to the URL's query string. Services such as the Twitter API expect
     the params as URL parameters and will ignore headers. Unfortunately, for now we still add
     headers otherwise signpost doesn't seem to sign them correctly.
 - Do not add params to "both" the query string and headers.
+- Code style tweaks.
+- README tweaks to provide HttpClient 4.x resources.
 
 Release notes 0.9 (31 August, 2010)
 - Fix the HttpURLConnection to apply the request method (i.e. GET, POST etc).

@@ -324,6 +324,7 @@ documentation:
 
     * http://oauth.net
     * http://code.google.com/p/oauth-signpost
+    * http://hc.apache.org/httpcomponents-client/index.html
 
 ------------------------
 Example usage
@@ -340,3 +341,4 @@ If you wish to contribute to the project you can find the full
 source available on GitHub.org:
 
     * http://wiki.github.com/dhou/grails-oauth
+
