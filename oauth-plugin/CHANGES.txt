@@ -1,7 +1,10 @@
-Version 0.10
+Version 0.11
 
 Potential improvements:
 - Unit test coverage.
+
+Release notes 0.10 (TBA)
+- 
 
 Release notes 0.10 (8th September, 2010)
 - Fix for GRAILSPLUGINS-2459, Add support for PUT/DELETE/HEAD/OPTIONS.
