@@ -2,6 +2,7 @@ Version 0.11
 
 Potential improvements:
 - Unit test coverage.
+- Split OauthServiceException.
 
 Release notes 0.10 (TBA)
 - 
