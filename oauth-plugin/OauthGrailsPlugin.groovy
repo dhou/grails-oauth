@@ -16,6 +16,7 @@
  */
 
 class OauthGrailsPlugin {
+	def version = "0.11" // added by set-version
     def version = 0.11
     def dependsOn = [:]
 

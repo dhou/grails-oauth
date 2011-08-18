@@ -1,11 +1,14 @@
-Version 0.11
+Version 0.12
 
 Potential improvements:
 - Unit test coverage.
 - Split OauthServiceException.
 
-Release notes 0.10 (TBA)
+Release notes 0.12 (TBA)
 - 
+ 
+Release notes 0.11 (19th August, 2011)
+- Fixed broken getProvider method. 
 
 Release notes 0.10 (8th September, 2010)
 - Fix for GRAILSPLUGINS-2459, Add support for PUT/DELETE/HEAD/OPTIONS.
