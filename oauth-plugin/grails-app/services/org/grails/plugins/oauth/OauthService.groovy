@@ -176,7 +176,7 @@ class OauthService implements InitializingBean {
                     log?.debug "----- Key: ${token?.key}"
                     log?.debug "----- Secret: ${token?.secret}"
 
-                    consumers[name] = ['key': token?.key, 'secret': token?.secret]
+                    consumers[name] = ['key': token?.key, 'secret': token?.secret, 'providerName': key]
 	        	}
 	        } else {
 	        	log?.error "Error initializaing OauthService: No consumers defined!"
@@ -611,7 +611,7 @@ class OauthService implements InitializingBean {
     }
     
     /**
-     * Returns the current consumer for the provided name.
+     * Returns the current consumer for the provided consumerName.
      *
      * @param consumerName the consumer name.
      * @return the consumer instance by name.
@@ -620,37 +620,35 @@ class OauthService implements InitializingBean {
      *      If {@code consumerName} does not represent an existing consumer.
      */
     private def getConsumer(final String consumerName) {
-        // Get values
+
         final def consumerValues = consumers[consumerName]
 
-        // Validate
         if (!consumerValues) {
-            throw new OauthServiceException("Unknown consumer: '$consumerName'")
+            throw new OauthServiceException("Unknown consumer: consumerName='$consumerName'")
         }
 
-        // Initialise new consumer
         return new CommonsHttpOAuthConsumer(consumerValues.key, consumerValues.secret)
     }
 
     /**
-     * Returns the current provider for the provided consumer.
+     * Returns the provider for the provided consumerName.
      *
-     * @param providerName the provider name.
+     * @param consumerName the consumer name.
      * @return the provider instance by name.
      *
      * @throws OauthServiceException
-     *      If {@code providerName} does not represent an existing provider.
+     *      If {@code consumerName} does not represent an existing provider.
      */
-    private def getProvider(final String providerName) {
-        // Get values
-        final def providerValues = providers[providerName]
+    private def getProvider(final String consumerName) {
 
-        // Validate
-        if (!providerValues) {
-            throw new OauthServiceException("Unknown provider! (providerName=$providerName)")
+        final String providerName = consumers[consumerName]?.providerName
+
+        if (!providerName) {
+            throw new OauthServiceException("Unknown consumer: consumerName='$consumerName'")
         }
 
-        // Initialise new provider
+        final def providerValues = providers[providerName]
+
         return new CommonsHttpOAuthProvider(providerValues.requestTokenUrl,
             providerValues.accessTokenUrl, providerValues.authUrl, httpClient)
     }
