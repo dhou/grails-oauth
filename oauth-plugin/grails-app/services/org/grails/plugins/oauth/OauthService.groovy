@@ -63,10 +63,9 @@ import org.apache.http.client.methods.HttpRequestBase
  * @author Antony Jones (Desirable Objects)
  */
 class OauthService implements InitializingBean {
-    // Transactional service
+
     boolean transactional = false
 
-    // Service properties
     def providers = [:]
     def consumers = [:]
     private HttpClient httpClient
@@ -209,6 +208,7 @@ class OauthService implements InitializingBean {
 
                     consumers[name] = ['key': token?.key, 'secret': token?.secret, 'providerName': key]
                 }
+                
             } else {
                 log?.error "Error initializaing OauthService: No consumers defined!"
             }
@@ -238,8 +238,11 @@ class OauthService implements InitializingBean {
             log.debug "Authorisation URL: ${authorisationURL}\n"
             log.debug "Is OAuth 1.0a: ${isOAuth10a}"
 
-            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL,
-                isOAuth10a: isOAuth10a]
+            return [key: consumer?.getToken(),
+                    secret: consumer?.getTokenSecret(),
+                    authUrl: authorisationURL,
+                    isOAuth10a: isOAuth10a
+                    ]
 
         } catch (Exception ex) {
             final def errorMessage = "Unable to fetch request token (consumerName=$consumerName)"
@@ -307,7 +310,7 @@ class OauthService implements InitializingBean {
             throw new OauthServiceException(errorMessage, ex)
         }
 
-        [key: accessToken, secret: tokenSecret]
+        return [key: accessToken, secret: tokenSecret]
     }
 
     /**
@@ -361,19 +364,21 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def accessResource(final def Map args) {
+    OauthResponse accessResource(final def Map args) {
+        
         final HttpResponse response = doRequest(args)
-        OauthResponse oauthResponse = new OauthResponse()
 
         try {
             log.debug "Reading response body"
-
+            OauthResponse oauthResponse = new OauthResponse()
+            
             oauthResponse.with {
-                body = EntityUtils.toString(response.getEntity())
+                body = EntityUtils.toString(response.entity)
                 status = response.statusCode
             }
 
             log.debug "Response body read successfully"
+            return oauthResponse
 
         } catch (Exception ex) {
 
@@ -383,7 +388,6 @@ class OauthService implements InitializingBean {
             
         }
 
-        return oauthResponse
     }
 
     /**
@@ -411,7 +415,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def doRequest(final def url, final String consumer, final def token,
+    HttpResponse doRequest(final def url, final String consumer, final def token,
         final def method = 'GET', final def params = [:], final def headers = [:],
         final def body = null, final def accept = null, final def contentType = null) {
 
@@ -442,7 +446,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def doRequest(final Map args) {
+    HttpResponse doRequest(final Map args) {
 
         final String consumer = args.consumer
         def url = args.url
@@ -515,7 +519,6 @@ class OauthService implements InitializingBean {
             requestMethod.setHeader("Accept", "$accept")
         }
 
-        // Sign, execute and return HttpResponse
         execute(requestMethod, consumer, token)
     }
 
@@ -558,18 +561,16 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code consumerName} does not represent an existing consumer.
      */
-    def HttpResponse execute(final HttpUriRequest request, final String consumerName,
+    HttpResponse execute(final HttpUriRequest request, final String consumerName,
             final def accessToken) {
-        // Validate token
-        assertAccessToken(accessToken)
+
+        validateAccessToken(accessToken)
         
         log.debug("Executing ${request?.getMethod()} to ${request?.getURI()}")
         
         try {
-            // Sign the request
-            sign(request, consumerName, accessToken)
 
-            // Execute it, return the HttpResponse
+            sign(request, consumerName, accessToken)
             httpClient.execute(request)
 
         } catch (Exception ex) {
@@ -599,9 +600,9 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code consumerName} does not represent an existing consumer.
      */
-    def sign(final HttpUriRequest request, final String consumerName, final def accessToken) {
-        // Check access token is valid
-        assertAccessToken(accessToken)
+    void sign(final HttpUriRequest request, final String consumerName, final def accessToken) {
+
+        validateAccessToken(accessToken)
 
         try {
             final OAuthConsumer consumer = getConsumer(consumerName)
@@ -646,7 +647,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code consumerName} does not represent an existing provider.
      */
-    private def getProvider(final String consumerName) {
+    private CommonsHttpOAuthProvider getProvider(final String consumerName) {
 
         final String providerName = consumers[consumerName]?.providerName
 
@@ -668,7 +669,7 @@ class OauthService implements InitializingBean {
      * @param the token to validate.
      * @throws OauthServiceException when provided token is invalid.
      */
-    private def assertAccessToken(def token) {
+    private void validateAccessToken(def token) {
         if (!token || !token?.key || !token?.secret) {
             final def errorMessage = "Invalid access token! (token=$token, token.key=${token?.key}, " +
                 "token.secret=${token?.secret})"
