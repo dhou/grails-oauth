@@ -52,6 +52,7 @@ import org.apache.http.params.BasicHttpParams
 import org.apache.http.protocol.HTTP
 import org.apache.http.util.EntityUtils
 import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.params.HttpConnectionParams
 
 /**
  * OAuth Service to provide OAuth functionality to a
@@ -66,10 +67,15 @@ class OauthService implements InitializingBean {
 
     boolean transactional = false
 
+    private static int SIXTY_SECONDS = 60000
+
     def providers = [:]
     def consumers = [:]
     private HttpClient httpClient
     String callback = ""
+
+    int connectionTimeout = C.config.httpClient.timeout.connection as Integer
+    int socketTimeout = C.config.httpClient.timeout.socket as Integer
 
     /**
      * Initialise config properties.
@@ -151,6 +157,9 @@ class OauthService implements InitializingBean {
         HttpProtocolParams.setVersion(clientParams, HttpVersion.HTTP_1_1)
         HttpProtocolParams.setContentCharset(clientParams, HTTP.UTF_8)
         HttpProtocolParams.setUseExpectContinue(clientParams, false)
+
+        HttpConnectionParams.setConnectionTimeout(clientParams, connectionTimeout ?: SIXTY_SECONDS)
+        HttpConnectionParams.setSoTimeout(clientParams, socketTimeout ?: SIXTY_SECONDS)
 
         final SchemeRegistry schemeRegistry = new SchemeRegistry()
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80))
@@ -337,7 +346,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def accessResource(final def url, final def consumer, final def token,
+    OauthResponse accessResource(final def url, final def consumer, final def token,
         final def method = 'GET', final def params = null, final def headers = [:],
         final def body = null, final def accept = null, final def contentType = null) {
         
@@ -374,7 +383,7 @@ class OauthService implements InitializingBean {
             
             oauthResponse.with {
                 body = EntityUtils.toString(response.entity)
-                status = response.statusCode
+                status = response.statusLine.statusCode
             }
 
             log.debug "Response body read successfully"
