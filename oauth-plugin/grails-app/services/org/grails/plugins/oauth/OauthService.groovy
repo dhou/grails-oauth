@@ -19,7 +19,6 @@ package org.grails.plugins.oauth
 import org.springframework.beans.factory.InitializingBean
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as C
 
-import oauth.signpost.OAuth
 import oauth.signpost.OAuthConsumer
 import oauth.signpost.OAuthProvider
 import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
@@ -348,12 +347,15 @@ class OauthService implements InitializingBean {
      */
     def accessResource(final def Map args) {
         final HttpResponse response = doRequest(args)
-        String body = ""
+        OauthResponse oauthPacket = new OauthResponse()
 
         try {
             log.debug "Reading response body"
 
-            body = EntityUtils.toString(response.getEntity())
+            oauthPacket.with {
+                body = EntityUtils.toString(response.getEntity())
+                status = response.statusCode
+            }
 
             log.debug "Response body read successfully"
 
@@ -366,7 +368,7 @@ class OauthService implements InitializingBean {
         }
 
         //  Provide response
-        return body
+        return oauthPacket
     }
 
     /**
