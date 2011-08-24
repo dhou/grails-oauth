@@ -16,23 +16,20 @@
  */
 
 class OauthGrailsPlugin {
+
     def version = 0.12
     def dependsOn = [:]
-
-    // TODO Fill in these fields
     def author = "Yong Rong (Damien) Hou, Anthony Campbell"
     def authorEmail = "houyongr [[at] gmail [dot]] com, acampbell3000 [[at] gmail [dot]] com"
     def title = "Adds OAuth capability to Grails apps"
     def description = '''Wraps up the Signpost OAuth Java implementation and provides out-of-the-box
-	OAuth functionality for Grails appplications.
-	'''
+	OAuth functionality for Grails appplications.'''
 
-    // URL to the plugin's documentation
     def documentation = "http://www.grails.org/plugin/oauth"
     
     def onConfigChange = { event ->
-        // Config change, need to reset the OauthService
         final def oauthService = event?.ctx?.getBean("oauthService")
         oauthService?.reset()
     }
+    
 }
