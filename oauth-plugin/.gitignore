@@ -1,0 +1,12 @@
+target
+web-app
+grails-app/taglib
+out
+.classpath
+.settings
+plugin.xml
+*.zip
+*.iml
+*.iws
+*.ipr
+.idea
