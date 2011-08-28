@@ -1,0 +1,19 @@
+<plugin name='oauth' version='0.12' grailsVersion='1.3.7 &gt; *'>
+  <author>Yong Rong (Damien) Hou, Anthony Campbell</author>
+  <authorEmail>houyongr [[at] gmail [dot]] com, acampbell3000 [[at] gmail [dot]] com</authorEmail>
+  <title>Adds OAuth capability to Grails apps</title>
+  <description>Wraps up the Signpost OAuth Java implementation and provides out-of-the-box
+	OAuth functionality for Grails appplications.</description>
+  <documentation>http://www.grails.org/plugin/oauth</documentation>
+  <resources>
+    <resource>BuildConfig</resource>
+    <resource>DataSource</resource>
+    <resource>UrlMappings</resource>
+    <resource>org.grails.plugins.oauth.OauthController</resource>
+    <resource>org.grails.plugins.oauth.OauthService</resource>
+    <resource>org.grails.plugins.oauth.OauthServiceException</resource>
+    <resource>org.grails.plugins.oauth.OauthTagLib</resource>
+  </resources>
+  <dependencies />
+  <behavior />
+</plugin>

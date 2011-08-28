@@ -17,7 +17,7 @@
 
 class OauthGrailsPlugin {
     
-    def version = 0.12
+    def version = 0.13
     def dependsOn = [:]
     def author = "Yong Rong (Damien) Hou, Anthony Campbell"
     def authorEmail = "houyongr [[at] gmail [dot]] com, acampbell3000 [[at] gmail [dot]] com"
