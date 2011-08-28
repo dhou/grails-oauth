@@ -16,9 +16,8 @@ package org.grails.plugins.oauth
  * limitations under the License.
  */
 
-import org.codehaus.groovy.grails.commons.ConfigurationHolder as C
-
 class OauthController {
+    
 	def oauthService
 	
 	/**
@@ -72,7 +71,6 @@ class OauthController {
      */
     def callback = {
         log.debug "Callback received..."
-
         log.debug "Got callback params: $params"
 
         // List session parameters

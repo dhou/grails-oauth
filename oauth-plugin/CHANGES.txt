@@ -3,10 +3,14 @@ Version 0.12
 Potential improvements:
 - Unit test coverage.
 - Split OauthServiceException.
+- OAuth 2.0 support.
 
-Release notes 0.12 (TBA)
+Release notes 0.13 (TBA)
 - 
- 
+
+Release notes 0.12 (28th August, 2011)
+- Allowed proper handling of RESTful responses.
+
 Release notes 0.11 (19th August, 2011)
 - Fixed broken getProvider method. 
 

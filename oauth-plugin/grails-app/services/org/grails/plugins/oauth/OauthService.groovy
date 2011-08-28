@@ -19,7 +19,6 @@ package org.grails.plugins.oauth
 import org.springframework.beans.factory.InitializingBean
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as C
 
-import oauth.signpost.OAuth
 import oauth.signpost.OAuthConsumer
 import oauth.signpost.OAuthProvider
 import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
@@ -52,6 +51,8 @@ import org.apache.http.params.HttpParams
 import org.apache.http.params.BasicHttpParams
 import org.apache.http.protocol.HTTP
 import org.apache.http.util.EntityUtils
+import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.params.HttpConnectionParams
 
 /**
  * OAuth Service to provide OAuth functionality to a
@@ -60,16 +61,21 @@ import org.apache.http.util.EntityUtils
  * @author Damien Hou
  * @author Anthony Campbell (anthonycampbell.co.uk)
  * @author Pete Doyle
+ * @author Antony Jones (Desirable Objects)
  */
 class OauthService implements InitializingBean {
-    // Transactional service
+
     boolean transactional = false
 
-    // Service properties
+    private static int SIXTY_SECONDS = 60000
+
     def providers = [:]
     def consumers = [:]
     private HttpClient httpClient
     String callback = ""
+
+    int connectionTimeout = C.config.httpClient.timeout.connection as Integer
+    int socketTimeout = C.config.httpClient.timeout.socket as Integer
 
     /**
      * Initialise config properties.
@@ -135,7 +141,40 @@ class OauthService implements InitializingBean {
         // Create call back link
         callback = serverURL + "oauth/callback"
         log?.debug "- Callback URL: ${callback}"
-        
+
+        readConfig()
+
+        // Release old connections on service resets
+        if (httpClient) {
+            httpClient.getConnectionManager().shutdown()
+        }
+
+        /*
+         * Prepare HTTP protocol parameters.
+         * Note: Twitter requires "expect continue" to be disabled.
+         */
+        final HttpParams clientParams = new BasicHttpParams()
+        HttpProtocolParams.setVersion(clientParams, HttpVersion.HTTP_1_1)
+        HttpProtocolParams.setContentCharset(clientParams, HTTP.UTF_8)
+        HttpProtocolParams.setUseExpectContinue(clientParams, false)
+
+        HttpConnectionParams.setConnectionTimeout(clientParams, connectionTimeout ?: SIXTY_SECONDS)
+        HttpConnectionParams.setSoTimeout(clientParams, socketTimeout ?: SIXTY_SECONDS)
+
+        final SchemeRegistry schemeRegistry = new SchemeRegistry()
+        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80))
+        schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443))
+
+        final ClientConnectionManager manager = new ThreadSafeClientConnManager(clientParams, schemeRegistry)
+        httpClient = new DefaultHttpClient(manager, clientParams)
+
+        log?.info "${this.getClass().getSimpleName()} intialisation complete"
+    }
+
+    /**
+     * Reads the configuration from Config.groovy
+     */
+    private void readConfig() {
         C.config.oauth.each { key, value ->
             log?.debug "Provider: ${key}"
             log?.debug "- Signed: ${value?.signed}"
@@ -153,60 +192,36 @@ class OauthService implements InitializingBean {
 
             // Initialise provider config map
             providers[key] = ['requestTokenUrl': requestTokenUrl, 'accessTokenUrl': value?.accessTokenUrl,
-                'authUrl': value?.authUrl]
-	        
-	        if (value?.consumer) {
-	        	/*
-                 * Default single consumer if single consumer defined, will not go on to parse
-                 * multiple consumers.
-                 */
-	        	log?.debug "- Single consumer:"
-	        	log?.debug "--- Key: ${value?.consumer?.key}"
-	        	log?.debug "--- Secret: ${value?.consumer?.secret}"
+                    'authUrl': value?.authUrl]
 
-                consumers[key] = ['key': value.consumer.key, 'secret': value.consumer.secret]
+            if (value?.consumer) {
+                /*
+                * Default single consumer if single consumer defined, will not go on to parse
+                * multiple consumers.
+                */
+                log?.debug "- Single consumer:"
+                log?.debug "--- Key: ${value?.consumer?.key}"
+                log?.debug "--- Secret: ${value?.consumer?.secret}"
 
-	        } else if (value?.consumers) {
-	        	// Multiple consumers from same provider
-	        	log?.debug "- Multiple consumers:"
+                consumers[key] = ['key': value.consumer.key, 'secret': value.consumer.secret, 'providerName': key]
 
-	        	final def allConsumers = value?.consumers
-	        	allConsumers.each { name, token ->
-	        		log?.debug "--- Consumer: ${name}"
+            } else if (value?.consumers) {
+                // Multiple consumers from same provider
+                log?.debug "- Multiple consumers:"
+
+                final def allConsumers = value?.consumers
+                allConsumers.each { name, token ->
+                    log?.debug "--- Consumer: ${name}"
                     log?.debug "----- Key: ${token?.key}"
                     log?.debug "----- Secret: ${token?.secret}"
 
                     consumers[name] = ['key': token?.key, 'secret': token?.secret, 'providerName': key]
-	        	}
-	        } else {
-	        	log?.error "Error initializaing OauthService: No consumers defined!"
-	        }   
+                }
+                
+            } else {
+                log?.error "Error initializaing OauthService: No consumers defined!"
+            }
         }
-
-        // Release old connections on service resets
-        if (httpClient) {
-            httpClient.getConnectionManager().shutdown()
-        }
-
-        /*
-         * Prepare HTTP protocol parameters.
-         * Note: Twitter requires "expect continue" to be disabled.
-         */
-        final HttpParams clientParams = new BasicHttpParams()
-        HttpProtocolParams.setVersion(clientParams, HttpVersion.HTTP_1_1)
-        HttpProtocolParams.setContentCharset(clientParams, HTTP.UTF_8)
-        HttpProtocolParams.setUseExpectContinue(clientParams, false)
-
-        // Scheme registry
-        final SchemeRegistry schemeRegistry = new SchemeRegistry()
-        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80))
-        schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443))
-
-        // Prepare connection managed and initialise new client
-        final ClientConnectionManager manager = new ThreadSafeClientConnManager(clientParams, schemeRegistry)
-        httpClient = new DefaultHttpClient(manager, clientParams)
-
-        log?.info "${this.getClass().getSimpleName()} intialisation complete\n"
     }
 
     /**
@@ -232,8 +247,11 @@ class OauthService implements InitializingBean {
             log.debug "Authorisation URL: ${authorisationURL}\n"
             log.debug "Is OAuth 1.0a: ${isOAuth10a}"
 
-            [key: consumer?.getToken(), secret: consumer?.getTokenSecret(), authUrl: authorisationURL,
-                isOAuth10a: isOAuth10a]
+            return [key: consumer?.getToken(),
+                    secret: consumer?.getTokenSecret(),
+                    authUrl: authorisationURL,
+                    isOAuth10a: isOAuth10a
+                    ]
 
         } catch (Exception ex) {
             final def errorMessage = "Unable to fetch request token (consumerName=$consumerName)"
@@ -255,7 +273,6 @@ class OauthService implements InitializingBean {
             final OAuthConsumer consumer = getConsumer(consumerName)
             final OAuthProvider provider = getProvider(consumerName)
             
-            // Set the request token
             consumer.setTokenWithSecret(requestToken.key, requestToken.secret)
             
             /*
@@ -266,25 +283,8 @@ class OauthService implements InitializingBean {
                 provider.setOAuth10a(true)
             }
             
-            // Retrieve access token
             provider.retrieveAccessToken(consumer, requestToken.verifier)
-
-            final def accessToken = consumer?.getToken()
-            final def tokenSecret = consumer?.getTokenSecret()
-
-            log.debug "Access token: $accessToken"
-            log.debug "Token secret: $tokenSecret\n"
-
-            if (!accessToken || !tokenSecret) {
-                final def errorMessage = "Unable to fetch access token, access token is missing! (" +
-                    "consumerName=$consumerName, requestToken=$requestToken, " +
-                    "accessToken=$accessToken, tokenSecret=$tokenSecret)"
-
-                log.error(errorMessage, ex)
-                throw new OauthServiceException(errorMessage, ex)
-            }
-
-            [key: accessToken, secret: tokenSecret]
+            return extractAccessTokenAndSecretFromConsumer(consumer, consumerName, requestToken)
 
         } catch (Exception ex) {
             final def errorMessage = "Unable to fetch access token! (consumerName=$consumerName, " +
@@ -294,7 +294,34 @@ class OauthService implements InitializingBean {
             throw new OauthServiceException(errorMessage, ex)
         }
     }
-    
+
+    /**
+     * Extracts the access token and the secret from the consumer map.
+     * 
+     * @param consumer
+     * @param consumerName
+     * @param requestToken
+     * @return
+     */
+    private Map<String, String> extractAccessTokenAndSecretFromConsumer(CommonsHttpOAuthConsumer consumer, consumerName, requestToken) {
+        final def accessToken = consumer?.getToken()
+        final def tokenSecret = consumer?.getTokenSecret()
+
+        log.debug "Access token: $accessToken"
+        log.debug "Token secret: $tokenSecret\n"
+
+        if (!accessToken || !tokenSecret) {
+            final def errorMessage = "Unable to fetch access token, access token is missing! (" +
+                    "consumerName=$consumerName, requestToken=$requestToken, " +
+                    "accessToken=$accessToken, tokenSecret=$tokenSecret)"
+
+            log.error(errorMessage, ex)
+            throw new OauthServiceException(errorMessage, ex)
+        }
+
+        return [key: accessToken, secret: tokenSecret]
+    }
+
     /**
      * Helper function with default parameters to access an OAuth protected resource.
      * 
@@ -319,7 +346,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def accessResource(final def url, final def consumer, final def token,
+    OauthResponse accessResource(final def url, final def consumer, final def token,
         final def method = 'GET', final def params = null, final def headers = [:],
         final def body = null, final def accept = null, final def contentType = null) {
         
@@ -336,7 +363,7 @@ class OauthService implements InitializingBean {
      *        Valid arguments: url, consumer, token, method, params, headers, body, accept,
      *        and contentType.<br/>
      *        
-     * @return the response body as a {@code String}.
+     * @return the response body as a {@code OauthResponse}.
      * 
      * @throws OauthServiceException
      *      If {@code method} is neither unset (defaults to 'GET') nor one of 'GET', 'PUT', 'POST',
@@ -346,27 +373,30 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def accessResource(final def Map args) {
+    OauthResponse accessResource(final def Map args) {
+        
         final HttpResponse response = doRequest(args)
-        String body = ""
 
         try {
             log.debug "Reading response body"
-
-            body = EntityUtils.toString(response.getEntity())
+            OauthResponse oauthResponse = new OauthResponse()
+            
+            oauthResponse.with {
+                body = EntityUtils.toString(response.entity)
+                status = response.statusLine.statusCode
+            }
 
             log.debug "Response body read successfully"
+            return oauthResponse
 
         } catch (Exception ex) {
-            final def errorMessage = "Unable to read response from protected resource request! " +
-                "(args=$args)"
 
+            final def errorMessage = "Unable to read response from protected resource request! (args=${args})"
             log.error(errorMessage, ex)
             throw new OauthServiceException(errorMessage, ex)
+            
         }
 
-        //  Provide response
-        return body
     }
 
     /**
@@ -394,7 +424,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def doRequest(final def url, final String consumer, final def token,
+    HttpResponse doRequest(final def url, final String consumer, final def token,
         final def method = 'GET', final def params = [:], final def headers = [:],
         final def body = null, final def accept = null, final def contentType = null) {
 
@@ -425,8 +455,8 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code args.consumer} does not represent an existing consumer.
      */
-    def doRequest(final Map args) {
-        // Declare request arguments
+    HttpResponse doRequest(final Map args) {
+
         final String consumer = args.consumer
         def url = args.url
         def token = args.token
@@ -454,35 +484,8 @@ class OauthService implements InitializingBean {
             url = url?.toURI()
         }
 
-        // Declare request method
-        HttpUriRequest requestMethod
+        HttpUriRequest requestMethod = chooseHttpMethod(method, url)
 
-        // Set request method
-        switch(method?.toUpperCase()) {
-            case "GET":
-                requestMethod = new HttpGet(url)
-                break;
-            case "PUT":
-                requestMethod = new HttpPut(url)
-                break;
-            case "POST":
-                requestMethod = new HttpPost(url)
-                break;
-            case "DELETE":
-                requestMethod = new HttpDelete(url)
-                break;
-            case "HEAD":
-                requestMethod = new HttpHead(url)
-                break;
-            case "OPTIONS":
-                requestMethod = new HttpOptions(url)
-                break;
-            default:
-                throw new OauthServiceException("Unsupported request method! (method=$method)")
-                break
-        }
-
-        // Prepare parameters
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>()
         params?.each { k, v ->
             log.debug("Adding param: [$k: $v]")
@@ -505,32 +508,48 @@ class OauthService implements InitializingBean {
             }
         }
 
-        // Set the body
         if (body) {
             log.debug("Set body content as request entity")
             requestMethod.setEntity(new StringEntity(body))
         }
 
-        // Set the headers
         headers?.each { k, v ->
             log.debug("Adding header: [$k: $v]")
             requestMethod.addHeader("$k", "$v")
         }
 
-        // Set the Content-Type header
         if (contentType) {
             log.debug("Set the Content-Type header to '$contentType'")
             requestMethod.setHeader(HTTP.CONTENT_TYPE, "$contentType")
         }
 
-        // Set the Accept header
         if (accept) {
             log.debug("Set the Accept header to '$accept'")
             requestMethod.setHeader("Accept", "$accept")
         }
 
-        // Sign, execute and return HttpResponse
         execute(requestMethod, consumer, token)
+    }
+
+    private HttpRequestBase chooseHttpMethod(String method, String url) {
+
+        switch (method?.toUpperCase()) {
+            case "GET":
+                return new HttpGet(url)
+            case "PUT":
+                return new HttpPut(url)
+            case "POST":
+                return  new HttpPost(url)
+            case "DELETE":
+                return new HttpDelete(url)
+            case "HEAD":
+                return new HttpHead(url)
+            case "OPTIONS":
+                return new HttpOptions(url)
+            default:
+                throw new OauthServiceException("Unsupported request method! (method=$method)")
+        }
+
     }
 
     /**
@@ -551,18 +570,16 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code consumerName} does not represent an existing consumer.
      */
-    def HttpResponse execute(final HttpUriRequest request, final String consumerName,
+    HttpResponse execute(final HttpUriRequest request, final String consumerName,
             final def accessToken) {
-        // Validate token
-        assertAccessToken(accessToken)
+
+        validateAccessToken(accessToken)
         
         log.debug("Executing ${request?.getMethod()} to ${request?.getURI()}")
         
         try {
-            // Sign the request
-            sign(request, consumerName, accessToken)
 
-            // Execute it, return the HttpResponse
+            sign(request, consumerName, accessToken)
             httpClient.execute(request)
 
         } catch (Exception ex) {
@@ -592,9 +609,9 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code consumerName} does not represent an existing consumer.
      */
-    def sign(final HttpUriRequest request, final String consumerName, final def accessToken) {
-        // Check access token is valid
-        assertAccessToken(accessToken)
+    void sign(final HttpUriRequest request, final String consumerName, final def accessToken) {
+
+        validateAccessToken(accessToken)
 
         try {
             final OAuthConsumer consumer = getConsumer(consumerName)
@@ -639,7 +656,7 @@ class OauthService implements InitializingBean {
      * @throws OauthServiceException
      *      If {@code consumerName} does not represent an existing provider.
      */
-    private def getProvider(final String consumerName) {
+    private CommonsHttpOAuthProvider getProvider(final String consumerName) {
 
         final String providerName = consumers[consumerName]?.providerName
 
@@ -661,7 +678,7 @@ class OauthService implements InitializingBean {
      * @param the token to validate.
      * @throws OauthServiceException when provided token is invalid.
      */
-    private def assertAccessToken(def token) {
+    private void validateAccessToken(def token) {
         if (!token || !token?.key || !token?.secret) {
             final def errorMessage = "Invalid access token! (token=$token, token.key=${token?.key}, " +
                 "token.secret=${token?.secret})"
