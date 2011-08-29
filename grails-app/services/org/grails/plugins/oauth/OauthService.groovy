@@ -74,8 +74,8 @@ class OauthService implements InitializingBean {
     private HttpClient httpClient
     String callback = ""
 
-    int connectionTimeout = C.config.httpClient.timeout.connection as Integer
-    int socketTimeout = C.config.httpClient.timeout.socket as Integer
+    Integer connectionTimeout = (C.config?.httpClient?.timeout?.connection ?: SIXTY_SECONDS) as Integer
+    Integer socketTimeout = (C.config?.httpClient?.timeout?.socket ?: SIXTY_SECONDS) as Integer
 
     /**
      * Initialise config properties.
@@ -158,8 +158,8 @@ class OauthService implements InitializingBean {
         HttpProtocolParams.setContentCharset(clientParams, HTTP.UTF_8)
         HttpProtocolParams.setUseExpectContinue(clientParams, false)
 
-        HttpConnectionParams.setConnectionTimeout(clientParams, connectionTimeout ?: SIXTY_SECONDS)
-        HttpConnectionParams.setSoTimeout(clientParams, socketTimeout ?: SIXTY_SECONDS)
+        HttpConnectionParams.setConnectionTimeout(clientParams, connectionTimeout)
+        HttpConnectionParams.setSoTimeout(clientParams, socketTimeout)
 
         final SchemeRegistry schemeRegistry = new SchemeRegistry()
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80))
