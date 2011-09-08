@@ -16,9 +16,10 @@ package org.grails.plugins.oauth
  * limitations under the License.
  */
 
+@Mixin(OauthState)
 class OauthController {
     
-	def oauthService
+	OauthService oauthService
 	
 	/**
 	 * The action to call to start the OAuth authorization sequence.
@@ -44,9 +45,9 @@ class OauthController {
             session.cbparams = params
 
             def token = oauthService?.fetchRequestToken(consumerName)
-            session.oauthToken = token
+            session[OAUTH_SESSION_KEY] = token
 
-            log.debug "Stored token to session: ${session.oauthToken}"
+            log.debug "Stored token to session: ${session[OAUTH_SESSION_KEY]}"
             def redir = token.authUrl
 
             log.debug "Going to redirect to auth url: $redir"
@@ -87,30 +88,25 @@ class OauthController {
         final def errorAction = params?.remove('error_action') ?: session?.cbparams?.remove('error_action')
         final def errorId = params?.remove('error_id') ?: session?.cbparams?.remove('error_id')
 
-        // Clean up
         params?.remove('controller')
         params?.remove('action')
 
-        //  List remaining parameters
         log.debug "Remaining parameters:"
         params.each { k, v ->
             log.debug "- $k: $v"
         }
 
-        // Update request parameters with session
         final def redirParams = params + session.cbparams
 
-        // List re-direct parameters
         log.debug "Re-direct parameters:"
         redirParams.each{ k, v ->
             log.debug "- $k: $v"
         }
 
-        // Kill session parameters
         session.cbparams = null
 
         final def oauth_token = params?.oauth_token
-        if (oauth_token && oauth_token != session.oauthToken.key) {
+        if (oauth_token && oauth_token != session[OAUTH_SESSION_KEY].key) {
             // Returned token is different from the last received request token
             flash.oauthError = message(code: "oauth.token.mismatch",
                 default: "There has been an error in the OAuth request. Please try again.")
@@ -123,18 +119,21 @@ class OauthController {
         def oauth_verifier = params?.oauth_verifier
 
         try {
+
+            Map oauthSession = session[OAUTH_SESSION_KEY] as Map ?: null
+
             def accessToken = oauthService?.fetchAccessToken(redirParams?.consumer,
-                [key: session?.oauthToken?.key, secret: session?.oauthToken?.secret,
-                    verifier: oauth_verifier, isOAuth10a: session?.oauthToken?.isOAuth10a])
-            session.oauthToken = accessToken
+                [key: oauthSession?.key, secret: oauthSession?.secret,
+                    verifier: oauth_verifier, isOAuth10a: oauthSession?.isOAuth10a])
+            session[OAUTH_SESSION_KEY] = accessToken
 
             log.debug("Got access token: ${accessToken?.key}")
             log.debug("Got token secret: ${accessToken?.secret}")
             log.debug("OAuth Verifier: ${oauth_verifier}")
-            log.debug("Saved token to session: [key]${session?.oauthToken?.key} " +
-                "[secret]${session?.oauthToken?.secret} " +
-                "[verifier]${session?.oauthToken?.verifier} " +
-                "[isOAuth10a]${session?.oauthToken?.isOAuth10a}")
+            log.debug("Saved token to session: [key]${session[OAUTH_SESSION_KEY]?.key} " +
+                "[secret]${session[OAUTH_SESSION_KEY]?.secret} " +
+                "[verifier]${session[OAUTH_SESSION_KEY]?.verifier} " +
+                "[isOAuth10a]${session[OAUTH_SESSION_KEY]?.isOAuth10a}")
             log.debug "Redirecting: [controller]$returnController, [action]$returnAction\n"
 
             redirect(controller: returnController, action: returnAction, id: returnId,

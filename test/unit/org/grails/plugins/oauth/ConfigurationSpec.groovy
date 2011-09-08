@@ -1,3 +1,5 @@
+package org.grails.plugins.oauth
+
 import grails.plugin.spock.ControllerSpec
 import org.grails.plugins.oauth.OauthService
 import grails.plugin.spock.UnitSpec
