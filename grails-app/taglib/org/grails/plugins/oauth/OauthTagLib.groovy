@@ -17,6 +17,9 @@ package org.grails.plugins.oauth
  */
 
 class OauthTagLib {
+
+    static namespace = 'oauth'
+
 	/**
 	 * Renders an OAuth user authorization request link to the service provider
 	 * 
@@ -31,7 +34,7 @@ class OauthTagLib {
 	 * <g:oauthLink consumer='myConsumer'>Authorize</g:oauthLink>
 	 * <g:oauthLink consumer='myConsumer' returnTo="[controller:'myController',action:'oauthComplete']" error="[controller:'errorController',action:'errorAction']">Authorize</g:oauthLink>
 	 */
-	def oauthLink = { attrs, body ->
+	def link = { attrs, body ->
 	    attrs.url = g.oauthUrl(attrs)
 	    out << g.link(attrs, body)
 	}
@@ -40,7 +43,7 @@ class OauthTagLib {
 	 * Construct the URL string for OAuth authorization action.
 	 * To be used in other means than a simple <a> link.
 	 */
-	def oauthUrl = { attrs ->
+	def url = { attrs ->
 		attrs.url = [controller:'oauth', action:'auth', params:[:]]
 
 	    final def returnTo = attrs.remove('returnTo')
@@ -76,7 +79,7 @@ class OauthTagLib {
 	 *     </div>
 	 * </g:hasLoginError>
 	 */
-	def hasOauthError = { attrs, body ->
+	def hasError = { attrs, body ->
 	    if (flash.oauthError) {
 	        out << body()
 	    }
@@ -89,9 +92,37 @@ class OauthTagLib {
 	 * 
 	 * <g:renderOauthError />
 	 */
-	def renderOauthError = { attrs ->
+	def renderError = { attrs ->
 	    if (flash.oauthError) {
 	        out << message(code: flash.oauthError)
 	    }
 	}
+
+    def connected = { attrs, body ->
+
+        if (oauthSession) {
+            out << body()
+        }
+
+     }
+
+     def disconnected = { attrs, body ->
+
+        if (!oauthSession) {
+
+            out << body()
+        }
+
+     }
+
+     def xeroLink = { attrs, body ->
+
+         out << g.oauthLink([consumer  :'creditApp',
+                           'class'   :attrs?.'class',
+                           returnTo  :[controller:'home', action:'dashboard'],
+                           error     :[controller:'home', action:'connection_failed']
+                         ]) { body() }
+
+     }
+
 }
